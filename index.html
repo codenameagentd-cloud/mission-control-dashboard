@@ -1372,7 +1372,7 @@ function renderTrend(events) {
     agentIds.forEach(a => counts[d][a] = 0);
   });
 
-  events.filter(e => e.type === 'completed').forEach(e => {
+  events.forEach(e => {
     const day = e.ts.slice(0, 10);
     if (counts[day] && counts[day][e.agent_id] !== undefined) {
       counts[day][e.agent_id]++;
