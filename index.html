@@ -847,11 +847,11 @@ async function refresh() {
   } catch (e) {
     document.getElementById('refresh-status').textContent = 'Using sample data';
     activitiesData = sampleEvents;
-    renderAgents(sampleAgents);
-    checkSLA(sampleAgents);
-    renderDependencyGraph(sampleAgents);
-    renderTimeline(sampleEvents);
-    renderTrend(sampleEvents);
+    try { renderAgents(sampleAgents); } catch(e2) { console.error('renderAgents:', e2); }
+    try { checkSLA(sampleAgents); } catch(e2) {}
+    try { renderDependencyGraph(sampleAgents); } catch(e2) {}
+    try { renderTimeline(sampleEvents); } catch(e2) {}
+    try { renderTrend(sampleEvents); } catch(e2) { console.error('renderTrend:', e2); }
   }
 }
 
