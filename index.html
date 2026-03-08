@@ -432,7 +432,7 @@ async function refresh() {
   try { checkSLA(agentsData); } catch(e) { console.error('checkSLA:', e); }
   try { renderAgentsTab(); } catch(e) { console.error('renderAgentsTab:', e); }
   try { renderTrend(activitiesData); } catch(e) { console.error('renderTrend:', e); }
-  renderKanban();
+  try { renderKanban(); } catch(e) { console.error("renderKanban:", e); }
   try { renderDepGraph(); } catch(e) { console.error('renderDepGraph:', e); }
 }
 
@@ -624,7 +624,7 @@ function addTask() {
     created: new Date().toISOString()
   });
   saveKanban();
-  renderKanban();
+  try { renderKanban(); } catch(e) { console.error("renderKanban:", e); }
   try { renderDepGraph(); } catch(e) { console.error('renderDepGraph:', e); }
   closeAddTask();
   document.getElementById('new-task-title').value = '';
@@ -632,7 +632,7 @@ function addTask() {
 function deleteKanbanTask(id) {
   kanbanTasks = kanbanTasks.filter(t => t.id !== id);
   saveKanban();
-  renderKanban();
+  try { renderKanban(); } catch(e) { console.error("renderKanban:", e); }
   try { renderDepGraph(); } catch(e) { console.error('renderDepGraph:', e); }
 }
 function saveKanban() { localStorage.setItem('kanban_tasks', JSON.stringify(kanbanTasks)); }
