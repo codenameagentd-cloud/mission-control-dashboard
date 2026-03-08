@@ -382,6 +382,13 @@
     border-radius: 2px;
   }
 
+
+  .tab-btn.active {
+    background: var(--text-primary);
+    color: var(--bg);
+    border-color: var(--text-primary);
+  }
+
   /* Edit Modal */
   .modal-overlay {
     display: none;
@@ -666,28 +673,75 @@ setInterval(refresh, REFRESH_INTERVAL);
 
 <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <h3 id="modal-title">Edit Agent</h3>
-    <div class="field">
-      <label>Status</label>
-      <select id="edit-status">
-        <option value="online">Online</option>
-        <option value="busy">Busy</option>
-        <option value="idle">Idle</option>
-        <option value="offline">Offline</option>
-      </select>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <h3 id="modal-title" style="margin:0">Edit Agent</h3>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-secondary tab-btn active" onclick="switchTab('edit')" id="tab-edit" style="font-size:11px;padding:4px 10px">Edit</button>
+        <button class="btn btn-secondary tab-btn" onclick="switchTab('reassign')" id="tab-reassign" style="font-size:11px;padding:4px 10px">Reassign</button>
+        <button class="btn btn-secondary tab-btn" onclick="switchTab('new')" id="tab-new" style="font-size:11px;padding:4px 10px">+ New</button>
+      </div>
     </div>
-    <div class="field">
-      <label>Current Task</label>
-      <input type="text" id="edit-task" placeholder="What are they working on?">
+
+    <!-- Edit Tab -->
+    <div id="panel-edit">
+      <div class="field">
+        <label>Status</label>
+        <select id="edit-status">
+          <option value="online">Online</option>
+          <option value="busy">Busy</option>
+          <option value="idle">Idle</option>
+          <option value="offline">Offline</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Current Task</label>
+        <input type="text" id="edit-task" placeholder="What are they working on?">
+      </div>
+      <div class="field">
+        <label>Progress</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" id="edit-progress" min="0" max="100" step="5" style="flex:1" oninput="document.getElementById('progress-val').textContent=this.value+'%'">
+          <span id="progress-val" style="font-size:11px;color:var(--text-tertiary);min-width:32px">0%</span>
+        </div>
+      </div>
     </div>
-    <div class="field">
-      <label>Progress</label>
-      <input type="range" id="edit-progress" min="0" max="100" step="5" oninput="document.getElementById('progress-val').textContent=this.value+'%'">
-      <span id="progress-val" style="font-size:11px;color:var(--text-tertiary)">0%</span>
+
+    <!-- Reassign Tab -->
+    <div id="panel-reassign" style="display:none">
+      <div class="field">
+        <label>Reassign Task To</label>
+        <select id="reassign-target"></select>
+      </div>
+      <div class="field">
+        <label>Task to Transfer</label>
+        <input type="text" id="reassign-task" readonly style="opacity:0.7">
+      </div>
+      <p style="font-size:11px;color:var(--text-tertiary);margin-top:8px">Current agent will be set to idle. Target agent will receive this task.</p>
     </div>
+
+    <!-- New Task Tab -->
+    <div id="panel-new" style="display:none">
+      <div class="field">
+        <label>Assign To</label>
+        <select id="new-agent"></select>
+      </div>
+      <div class="field">
+        <label>Task Description</label>
+        <input type="text" id="new-task" placeholder="Describe the task...">
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <select id="new-priority">
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" id="save-btn" onclick="saveAgent()">Save</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveAction()">Save</button>
     </div>
   </div>
 </div>
@@ -762,15 +816,43 @@ const BRANCH = 'main';
 let editingAgent = null;
 let currentTasks = null;
 
+let currentTab = 'edit';
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['edit','reassign','new'].forEach(t => {
+    document.getElementById('panel-' + t).style.display = t === tab ? '' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  const btn = document.getElementById('save-btn');
+  btn.textContent = tab === 'reassign' ? 'Reassign' : tab === 'new' ? 'Create' : 'Save';
+}
+
 function openModal(agentId) {
   const agent = (currentTasks || {agents:[]}).agents.find(a => a.id === agentId);
   if (!agent) return;
   editingAgent = agentId;
+  currentTab = 'edit';
+  switchTab('edit');
   document.getElementById('modal-title').textContent = agent.name;
   document.getElementById('edit-status').value = agent.status;
   document.getElementById('edit-task').value = agent.current_task || '';
   document.getElementById('edit-progress').value = agent.progress;
   document.getElementById('progress-val').textContent = agent.progress + '%';
+
+  // Populate reassign dropdown (all agents except current)
+  const others = (currentTasks.agents || []).filter(a => a.id !== agentId);
+  document.getElementById('reassign-target').innerHTML = others.map(a =>
+    '<option value="' + a.id + '">' + a.name + '</option>'
+  ).join('');
+  document.getElementById('reassign-task').value = agent.current_task || '';
+
+  // Populate new task agent dropdown
+  document.getElementById('new-agent').innerHTML = (currentTasks.agents || []).map(a =>
+    '<option value="' + a.id + '"' + (a.id === agentId ? ' selected' : '') + '>' + a.name + '</option>'
+  ).join('');
+  document.getElementById('new-task').value = '';
+
   document.getElementById('modal-overlay').classList.add('active');
 }
 
@@ -786,7 +868,84 @@ function showToast(msg, duration) {
   setTimeout(() => t.classList.remove('show'), duration || 3000);
 }
 
-async function saveAgent() {
+async function saveAction() {
+  if (currentTab === 'edit') return saveEdit();
+  if (currentTab === 'reassign') return saveReassign();
+  if (currentTab === 'new') return saveNewTask();
+}
+
+async function saveReassign() {
+  if (!editingAgent || !currentTasks) return;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Reassigning…';
+  try {
+    const source = currentTasks.agents.find(a => a.id === editingAgent);
+    const targetId = document.getElementById('reassign-target').value;
+    const target = currentTasks.agents.find(a => a.id === targetId);
+    if (!source || !target) throw new Error('Agent not found');
+
+    const task = source.current_task;
+    const progress = source.progress;
+    target.current_task = task;
+    target.progress = progress;
+    target.status = 'busy';
+    target.updated_at = new Date().toISOString();
+    source.current_task = '';
+    source.progress = 0;
+    source.status = 'idle';
+    source.updated_at = new Date().toISOString();
+    currentTasks.generated_at = new Date().toISOString();
+
+    await commitTasks('Reassign: ' + task + ' from ' + source.name + ' to ' + target.name);
+    showToast('Reassigned to ' + target.name);
+    closeModal();
+    setTimeout(refresh, 2000);
+  } catch(e) { showToast('Error: ' + e.message, 5000); }
+  finally { btn.disabled = false; btn.textContent = 'Reassign'; }
+}
+
+async function saveNewTask() {
+  if (!currentTasks) return;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const agentId = document.getElementById('new-agent').value;
+    const agent = currentTasks.agents.find(a => a.id === agentId);
+    const task = document.getElementById('new-task').value.trim();
+    if (!agent || !task) throw new Error('Missing agent or task');
+
+    agent.current_task = task;
+    agent.progress = 0;
+    agent.status = 'busy';
+    agent.updated_at = new Date().toISOString();
+    currentTasks.generated_at = new Date().toISOString();
+
+    await commitTasks('New task for ' + agent.name + ': ' + task);
+    showToast('Task assigned to ' + agent.name);
+    closeModal();
+    setTimeout(refresh, 2000);
+  } catch(e) { showToast('Error: ' + e.message, 5000); }
+  finally { btn.disabled = false; btn.textContent = 'Create'; }
+}
+
+async function commitTasks(message) {
+  const metaRes = await fetch('https://api.github.com/repos/' + REPO + '/contents/data/tasks.json?ref=' + BRANCH, { headers: ghHeaders() });
+  if (!metaRes.ok) throw new Error('Failed to read');
+  const meta = await metaRes.json();
+  const updateRes = await fetch('https://api.github.com/repos/' + REPO + '/contents/data/tasks.json', {
+    method: 'PUT',
+    headers: ghHeaders(),
+    body: JSON.stringify({
+      message: message,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(currentTasks, null, 2)))),
+      sha: meta.sha,
+      branch: BRANCH
+    })
+  });
+  if (!updateRes.ok) throw new Error('Failed to save');
+}
+
+async function saveEdit() {
   if (!editingAgent || !currentTasks) return;
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
@@ -800,26 +959,7 @@ async function saveAgent() {
     agent.updated_at = new Date().toISOString();
     currentTasks.generated_at = new Date().toISOString();
 
-    // Get current file SHA
-    const metaRes = await fetch(`https://api.github.com/repos/${REPO}/contents/data/tasks.json?ref=${BRANCH}`, {
-      headers: ghHeaders()
-    });
-    if (!metaRes.ok) throw new Error('Failed to read file');
-    const meta = await metaRes.json();
-
-    // Update file
-    const updateRes = await fetch(`https://api.github.com/repos/${REPO}/contents/data/tasks.json`, {
-      method: 'PUT',
-      headers: ghHeaders(),
-      body: JSON.stringify({
-        message: `Update ${agent.name}: ${agent.status} — ${agent.current_task || 'idle'}`,
-        content: btoa(unescape(encodeURIComponent(JSON.stringify(currentTasks, null, 2)))),
-        sha: meta.sha,
-        branch: BRANCH
-      })
-    });
-
-    if (!updateRes.ok) throw new Error('Failed to save');
+    await commitTasks('Update ' + agent.name + ': ' + agent.status + ' — ' + (agent.current_task || 'idle'));
     showToast('Saved — refreshing…');
     closeModal();
     setTimeout(refresh, 2000);
