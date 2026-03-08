@@ -93,3 +93,15 @@ Notes:
 ### Progress
 - Prefer `tasks[].progress` for per-task progress.
 - Agent-level `progress` can be kept for backward compatibility (optional/derived from active task).
+
+
+## Dispatcher (agent-side)
+To sync Dashboard → Agent execution, each agent should poll `tasks.json` and react to:
+- `active_task_id` changes (switch task)
+- `tasks[].priority` changes (reorder queue)
+
+A sample dispatcher script is provided at `tools/dispatcher.py`.
+Run via cron (example):
+```
+*/1 * * * * AGENT_ID=naomi /usr/bin/env python3 /path/to/tools/dispatcher.py
+```
