@@ -11,7 +11,7 @@
       "task_queue": [
         {
           "id": "t1",
-          "title": "QA + 進度追蹤",
+          "title": "QA + Progress Tracking",
           "progress": 40,
           "priority": "normal",
           "active": true
@@ -35,7 +35,7 @@
       "task_queue": [
         {
           "id": "t1",
-          "title": "Dashboard UI 設計",
+          "title": "Dashboard UI Design",
           "progress": 60,
           "priority": "normal",
           "active": true
@@ -59,7 +59,7 @@
       "task_queue": [
         {
           "id": "t1",
-          "title": "Repo + Schema 建置",
+          "title": "Repo + Schema Setup",
           "progress": 90,
           "priority": "normal",
           "active": true
@@ -83,7 +83,7 @@
       "task_queue": [
         {
           "id": "t1",
-          "title": "需求規格撰寫",
+          "title": "Requirements Spec",
           "progress": 100,
           "priority": "normal",
           "active": true
@@ -100,7 +100,7 @@
       "task_queue": [
         {
           "id": "t1",
-          "title": "Daily Briefing + 生活管理",
+          "title": "Daily Briefing + Life Management",
           "progress": 50,
           "priority": "normal",
           "active": true
