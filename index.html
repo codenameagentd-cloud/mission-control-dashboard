@@ -954,8 +954,7 @@ const sampleEvents = [
   { ts: new Date(Date.now() - 360000).toISOString(), agent_id: 'jennie', type: 'updated', summary: 'Daily briefing 進行中' }
 ];
 
-refresh();
-setInterval(refresh, REFRESH_INTERVAL);
+// refresh() moved to end of page
 
 const AGENTS_LIST = ['lisa','jony','jarvis','naomi','jennie'];
 
@@ -1912,6 +1911,10 @@ function renderDependencyGraph(agents) {
     dragIdx = -1;
   }, { passive: true });
 })();
+
+// Start after all functions defined
+refresh();
+setInterval(refresh, REFRESH_INTERVAL);
 </script>
 </body>
 </html>
