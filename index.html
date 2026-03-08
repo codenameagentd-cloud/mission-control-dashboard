@@ -721,6 +721,9 @@ function switchTab(name) {
   if (tab) tab.classList.add('active');
   const content = document.getElementById('tab-'+name);
   if (content) content.classList.add('active');
+  if (name === 'agents') { try { renderAgentsTab(); } catch(e) { console.error('renderAgentsTab:', e); } }
+  if (name === 'tasks') { try { renderKanban(); } catch(e) { console.error('renderKanban:', e); } }
+  if (name === 'overview') { try { renderOverview(); renderTrend(activitiesData); renderDeps(); checkSLA(agentsData); } catch(e) { console.error('renderOverview:', e); } }
   closeCmdK();
 }
 function openCmdK() {
