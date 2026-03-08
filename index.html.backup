@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission Control</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface-hover: #1a1a1a;
+    --border: #222;
+    --text-primary: #e8e8e8;
+    --text-secondary: #777;
+    --text-tertiary: #555;
+    --accent: #fff;
+    --online: #34d399;
+    --busy: #f59e0b;
+    --idle: #6b7280;
+    --offline: #374151;
+    --blocked: #ef4444;
+    --radius: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 48px;
+  }
+
+  .header-left h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .header-left .meta {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pulse {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--online);
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .refresh-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font);
+  }
+
+  .refresh-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
+  .refresh-btn.loading { opacity: 0.5; pointer-events: none; }
+  .refresh-btn .icon { transition: transform 0.4s ease; }
+  .refresh-btn.loading .icon { animation: spin 0.8s linear infinite; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Agent Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: background 0.2s ease;
+  }
+
+  .card:hover { background: var(--surface-hover); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .agent-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--offline);
+    color: var(--text-primary);
+  }
+
+  .status-badge.online { background: rgba(52,211,153,0.15); color: var(--online); }
+  .status-badge.busy { background: rgba(245,158,11,0.15); color: var(--busy); animation: breathe 2s ease-in-out infinite; }
+  .status-badge.idle { background: rgba(107,114,128,0.15); color: var(--idle); }
+  .status-badge.offline { background: rgba(55,65,81,0.3); color: var(--text-tertiary); }
+
+  @keyframes breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .task-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    min-height: 18px;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--text-secondary);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .progress-pct {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .completed-count {
+    background: rgba(52,211,153,0.1);
+    color: var(--online);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+
+  /* Timeline Section */
+  .timeline-section {
+    margin-top: 48px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .section-header h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: -0.01em;
+  }
+
+  .timeline {
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .timeline-item {
+    position: relative;
+    padding: 0 0 20px 20px;
+    font-size: 13px;
+  }
+
+  .timeline-item:last-child { padding-bottom: 0; }
+
+  .timeline-dot {
+    position: absolute;
+    left: -17px;
+    top: 6px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+  }
+
+  .timeline-dot.started { background: var(--online); }
+  .timeline-dot.completed { background: var(--online); }
+  .timeline-dot.updated { background: var(--busy); }
+  .timeline-dot.blocked { background: var(--blocked); }
+  .timeline-dot.note { background: var(--idle); }
+
+  .timeline-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .timeline-time {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timeline-agent {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .timeline-type {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .timeline-type.started { background: rgba(52,211,153,0.15); color: var(--online); }
+  .timeline-type.completed { background: rgba(52,211,153,0.15); color: var(--online); }
+  .timeline-type.updated { background: rgba(245,158,11,0.12); color: var(--busy); }
+  .timeline-type.blocked { background: rgba(239,68,68,0.15); color: var(--blocked); }
+  .timeline-type.note { background: rgba(107,114,128,0.15); color: var(--idle); }
+
+  .timeline-summary {
+    color: var(--text-primary);
+  }
+
+  .empty {
+    color: var(--text-tertiary);
+    font-size: 13px;
+    text-align: center;
+    padding: 48px 0;
+  }
+
+  @media (max-width: 640px) {
+    .container { padding: 32px 16px; }
+    .grid { grid-template-columns: 1fr; }
+    header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  }
+
+
+  /* Trend Chart */
+  .trend-section {
+    margin-top: 48px;
+  }
+
+  .chart-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 120px;
+    padding: 16px 0;
+  }
+
+  .chart-day {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .chart-bars {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    flex: 1;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .chart-bar {
+    width: 8px;
+    min-height: 2px;
+    border-radius: 2px;
+    transition: height 0.4s ease;
+  }
+
+  .chart-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.02em;
+  }
+
+  .chart-count {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trend-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+
+
+  /* Task Queue */
+  .task-queue {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: grab;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+
+  .task-item:hover { background: var(--surface-hover); }
+  .task-item.active { border-color: var(--border); background: var(--surface-hover); }
+  .task-item.dragging { opacity: 0.5; }
+  .task-item.drag-over { border-color: var(--text-tertiary); }
+
+  .task-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .task-dot.active { background: #34d399; }
+  .task-dot.queued { background: var(--text-tertiary); }
+
+  .task-title { flex: 1; color: var(--text-secondary); }
+  .task-item.active .task-title { color: var(--text-primary); }
+
+  .task-priority {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .task-priority.high { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .task-priority.low { background: rgba(156,163,175,0.15); color: #9ca3af; }
+
+  .task-switch-btn {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .task-item:hover .task-switch-btn { opacity: 1; }
+
+  .tab-btn.active {
+    background: var(--text-primary);
+    color: var(--bg);
+    border-color: var(--text-primary);
+  }
+
+  /* Edit Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 380px;
+    max-width: 90vw;
+  }
+
+  .modal h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: var(--font);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--text-tertiary);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+
+  .btn {
+    font-size: 13px;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.2s;
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text-secondary);
+  }
+
+  .btn-secondary:hover { background: var(--surface-hover); }
+
+  .btn-primary {
+    background: var(--text-primary);
+    color: var(--bg);
+    border-color: var(--text-primary);
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text-primary);
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.3s ease;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .card { cursor: pointer; }
+
+
+  .sla-alert {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #f87171;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sla-alert::before {
+    content: '⏰';
+  }
+
+
+  .cmd-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 20vh;
+  }
+  .cmd-overlay.active { display: flex; }
+  .cmd-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 500px;
+    max-width: 90vw;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .cmd-input {
+    width: 100%;
+    padding: 16px 20px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 16px;
+    outline: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmd-input::placeholder { color: var(--text-tertiary); }
+  .cmd-results {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .cmd-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .cmd-item:hover, .cmd-item.selected {
+    background: rgba(96,165,250,0.15);
+    color: var(--text);
+  }
+  .cmd-item .cmd-agent {
+    font-weight: 600;
+    color: var(--text);
+    min-width: 60px;
+  }
+  .cmd-hint {
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    border-top: 1px solid var(--border);
+  }
+
+
+  .batch-bar {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    gap: 10px;
+    align-items: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    z-index: 1500;
+    font-size: 13px;
+  }
+  .batch-bar.active { display: flex; }
+  .batch-bar .batch-count { color: var(--text); font-weight: 600; margin-right: 4px; }
+  .batch-bar button {
+    padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px;
+  }
+  .batch-bar button:hover { background: rgba(96,165,250,0.15); color: var(--text); }
+  .batch-bar button.danger:hover { background: rgba(239,68,68,0.15); color: #f87171; }
+  .task-check { width: 14px; height: 14px; accent-color: #60a5fa; cursor: pointer; flex-shrink: 0; }
+
+
+  .dep-graph {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+  }
+  .dep-graph h2 { font-size: 14px; margin: 0 0 16px; color: var(--text); }
+  .dep-graph svg { width: 100%; height: 200px; }
+  .dep-node {
+    cursor: pointer;
+  }
+  .dep-node circle { transition: all 0.2s; }
+  .dep-node:hover circle { r: 22; }
+  .dep-edge { stroke: var(--border); stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+  .dep-edge.blocked { stroke: #f87171; stroke-dasharray: 4,3; }
+  .dep-label { font-size: 11px; fill: var(--text); text-anchor: middle; pointer-events: none; }
+
+  .drag-handle { cursor: grab; opacity: 0.4; margin-right: 8px; font-size: 14px; user-select: none; }
+  .drag-handle:hover { opacity: 0.8; }
+  .task-item:active .drag-handle { cursor: grabbing; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-left">
+      <h1>Mission Control</h1>
+      <div class="meta">
+        <span class="pulse"></span>
+        <span id="refresh-status">Loading…</span>
+      </div>
+    </div>
+    <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">
+      <span class="icon">↻</span> Refresh
+    </button>
+  </header>
+
+  <div class="grid" id="agent-grid"></div>
+
+  
+  <div class="trend-section">
+    <div class="section-header">
+      <h2>7-Day Activity</h2>
+    </div>
+    <div class="chart-container" id="trend-chart"></div>
+    <div class="trend-legend" id="trend-legend"></div>
+  </div>
+
+  <div class="timeline-section">
+    <div class="section-header">
+      <h2>Activity Timeline</h2>
+    </div>
+    <div class="timeline" id="timeline">
+      <div class="empty">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA_BASE = 'data/';
+const REFRESH_INTERVAL = 30000;
+let activitiesData = [];
+
+function relativeTime(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs / 24) + 'd ago';
+}
+
+function formatTime(dateStr) {
+  return new Date(dateStr).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function countCompleted(agentId) {
+  const today = new Date().toISOString().slice(0, 10);
+  return activitiesData.filter(e =>
+    e.agent_id === agentId && e.type === 'completed' && e.ts.startsWith(today)
+  ).length;
+}
+
+function renderAgents(agents) {
+  const grid = document.getElementById('agent-grid');
+  grid.innerHTML = agents.map(a => {
+    const done = countCompleted(a.id);
+    const doneTag = done > 0
+      ? `<span class="completed-count">${done} done today</span>`
+      : '';
+    return `
+    <div class="card" onclick="openModal('${a.id}')">
+      <div class="card-header">
+        <span class="agent-name">${a.name}</span>
+        <span class="status-badge ${a.status}">${a.status}</span>
+      </div>
+      <div class="task-label">${a.current_task || 'No active task'}</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:10px;color:var(--text-tertiary)">Task progress</span>
+        <span style="font-size:10px;color:var(--text-tertiary)">${(a.task_queue||[]).length||1} task${(a.task_queue||[]).length!==1?'s':''} · ${(a.task_queue||[]).filter(t=>t.active).length||1} active</span>
+      </div>
+      <div class="progress-row">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${a.progress}%"></div>
+        </div>
+        <span class="progress-pct">${a.progress}%</span>
+      </div>
+      <div class="card-footer">
+        <span>${relativeTime(a.updated_at)}</span>
+        ${doneTag}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTimeline(events) {
+  const el = document.getElementById('timeline');
+  const recent = events.slice(-20).reverse();
+  if (!recent.length) {
+    el.innerHTML = '<div class="empty">No activity yet</div>';
+    return;
+  }
+  el.innerHTML = recent.map(e => `
+    <div class="timeline-item">
+      <div class="timeline-dot ${e.type}"></div>
+      <div class="timeline-meta">
+        <span class="timeline-time">${formatTime(e.ts)}</span>
+        <span class="timeline-agent">${e.agent_id}</span>
+        <span class="timeline-type ${e.type}">${e.type}</span>
+      </div>
+      <div class="timeline-summary">${e.summary}</div>
+    </div>
+  `).join('');
+}
+
+async function fetchJSON(path) {
+  const res = await fetch(path + '?t=' + Date.now());
+  if (!res.ok) throw new Error(res.status);
+  return res.json();
+}
+
+async function refresh() {
+  try {
+    const [tasks, activities] = await Promise.all([
+      fetchJSON(DATA_BASE + 'tasks.json'),
+      fetchJSON(DATA_BASE + 'activities.json')
+    ]);
+    activitiesData = activities.events || [];
+    currentTasks = tasks;
+    renderAgents(tasks.agents || []);
+    // Inject task queues into cards
+    document.querySelectorAll('.card').forEach(card => {
+      const onclick = card.getAttribute('onclick');
+      if (!onclick) return;
+      const match = onclick.match(/openModal\('(\w+)'\)/);
+      if (!match) return;
+      const agent = (currentTasks || {agents:[]}).agents.find(a => a.id === match[1]);
+      if (agent && agent.task_queue && agent.task_queue.length > 0) {
+        card.insertAdjacentHTML('beforeend', renderTaskQueue(agent));
+      }
+    });
+
+    checkSLA(currentTasks.agents);
+    renderDependencyGraph(currentTasks.agents);
+    renderTimeline(activitiesData);
+    renderTrend(activitiesData);
+    document.getElementById('refresh-status').textContent =
+      'Updated ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    document.getElementById('refresh-status').textContent = 'Using sample data';
+    activitiesData = sampleEvents;
+    try { renderAgents(sampleAgents); } catch(e2) { console.error('renderAgents:', e2); }
+    try { checkSLA(sampleAgents); } catch(e2) {}
+    try { renderDependencyGraph(sampleAgents); } catch(e2) {}
+    try { renderTimeline(sampleEvents); } catch(e2) {}
+    try { renderTrend(sampleEvents); } catch(e2) { console.error('renderTrend:', e2); }
+  }
+}
+
+
+function checkSLA(agents) {
+  const now = Date.now();
+  const SLA_HOURS = 2;
+  agents.forEach(a => {
+    const card = document.querySelector('.card[onclick*="' + a.id + '"]');
+    if (!card) return;
+    // Remove old alert
+    const old = card.querySelector('.sla-alert');
+    if (old) old.remove();
+    
+    if (a.status === 'offline' || a.status === 'idle') return;
+    const updated = new Date(a.updated_at).getTime();
+    const hoursAgo = (now - updated) / (1000 * 60 * 60);
+    if (hoursAgo > SLA_HOURS) {
+      const alert = document.createElement('div');
+      alert.className = 'sla-alert';
+      alert.textContent = 'No update for ' + Math.floor(hoursAgo) + 'h — may be stalled';
+      card.appendChild(alert);
+    }
+  });
+}
+
+
+async function logActivity(agentId, type, summary) {
+  if (!GH_TOKEN || !GH_REPO) return;
+  try {
+    // Fetch current activities
+    const res = await fetch('https://api.github.com/repos/' + GH_REPO + '/contents/data/activities.json', {
+      headers: { Authorization: 'token ' + GH_TOKEN }
+    });
+    const file = await res.json();
+    const data = JSON.parse(atob(file.content));
+    
+    // Add new event
+    const event = {
+      ts: new Date().toISOString(),
+      agent_id: agentId,
+      type: type,
+      summary: summary
+    };
+    data.events.unshift(event);
+    
+    // Keep max 100 events
+    if (data.events.length > 100) data.events = data.events.slice(0, 100);
+    data.generated_at = new Date().toISOString();
+    
+    // Push update
+    await fetch('https://api.github.com/repos/' + GH_REPO + '/contents/data/activities.json', {
+      method: 'PUT',
+      headers: { Authorization: 'token ' + GH_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: agentId + ': ' + type + ' - ' + summary,
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
+        sha: file.sha
+      })
+    });
+  } catch (e) { console.warn('Activity log failed:', e); }
+}
+
+function manualRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('loading');
+  refresh().finally(() => {
+    setTimeout(() => btn.classList.remove('loading'), 400);
+  });
+}
+
+const sampleAgents = [
+  { id: 'lisa', name: 'Lisa', status: 'online', current_task: 'QA + 進度追蹤', progress: 40, updated_at: new Date().toISOString(), task_queue: [
+    { id: 'l1', title: 'QA + 進度追蹤', progress: 40, priority: 'HIGH', active: true },
+    { id: 'l2', title: 'Gap analysis review', progress: 100, priority: 'LOW', active: false }
+  ]},
+  { id: 'jony', name: 'Jony', status: 'busy', current_task: 'Dashboard Phase 2', progress: 30, updated_at: new Date().toISOString(), task_queue: [
+    { id: 'j1', title: 'Dashboard Phase 2', progress: 30, priority: 'HIGH', active: true },
+    { id: 'j2', title: 'Design Diary', progress: 0, priority: 'LOW', active: false }
+  ]},
+  { id: 'jarvis', name: 'Jarvis', status: 'busy', current_task: 'Repo + Schema 建置', progress: 90, updated_at: new Date().toISOString(), task_queue: [
+    { id: 'v1', title: 'Repo + Schema 建置', progress: 90, priority: 'HIGH', active: true },
+    { id: 'v2', title: 'Dispatcher cron setup', progress: 100, priority: 'LOW', active: false }
+  ]},
+  { id: 'naomi', name: 'Naomi', status: 'online', current_task: '需求規格撰寫', progress: 100, updated_at: new Date().toISOString(), task_queue: [
+    { id: 'n1', title: '需求規格撰寫', progress: 100, priority: 'HIGH', active: true },
+    { id: 'n2', title: 'Feature comparison', progress: 0, priority: 'LOW', active: false }
+  ]},
+  { id: 'jennie', name: 'Jennie', status: 'online', current_task: 'Daily Briefing + 生活管理', progress: 50, updated_at: new Date().toISOString(), task_queue: [
+    { id: 'e1', title: 'Daily Briefing + 生活管理', progress: 50, priority: 'HIGH', active: true }
+  ]}
+];
+
+const sampleEvents = [
+  { ts: new Date(Date.now() - 60000).toISOString(), agent_id: 'jony', type: 'started', summary: 'Dashboard Phase 2 — Timeline + Stats' },
+  { ts: new Date(Date.now() - 120000).toISOString(), agent_id: 'jarvis', type: 'completed', summary: 'Schema + README pushed to repo' },
+  { ts: new Date(Date.now() - 180000).toISOString(), agent_id: 'naomi', type: 'completed', summary: '需求規格 v1 + P1 清單' },
+  { ts: new Date(Date.now() - 240000).toISOString(), agent_id: 'jony', type: 'completed', summary: 'MVP Dashboard UI — QA approved' },
+  { ts: new Date(Date.now() - 300000).toISOString(), agent_id: 'lisa', type: 'started', summary: 'Project kickoff — Mission Control' },
+  { ts: new Date(Date.now() - 360000).toISOString(), agent_id: 'jennie', type: 'updated', summary: 'Daily briefing 進行中' }
+];
+
+// refresh() moved to end of page
+
+const AGENTS_LIST = ['lisa','jony','jarvis','naomi','jennie'];
+
+function openCmdBar() {
+  document.getElementById('cmd-overlay').classList.add('active');
+  const input = document.getElementById('cmd-input');
+  input.value = '';
+  input.focus();
+  renderCmdResults('');
+}
+
+function closeCmdBar() {
+  document.getElementById('cmd-overlay').classList.remove('active');
+}
+
+function renderCmdResults(query) {
+  const results = document.getElementById('cmd-results');
+  if (!query.trim()) {
+    results.innerHTML = AGENTS_LIST.map(a =>
+      '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
+      '<span class="cmd-agent">@' + a + '</span> Ready for task</div>'
+    ).join('');
+    return;
+  }
+  
+  const match = query.match(/^@(\w+)\s*(.*)/);
+  if (match) {
+    const agent = match[1].toLowerCase();
+    const task = match[2];
+    if (AGENTS_LIST.includes(agent)) {
+      results.innerHTML = '<div class="cmd-item selected" onclick="dispatchTask(\'' + agent + '\',\'' + (task||'').replace(/'/g,"\\'") + '\')">' +
+        '<span class="cmd-agent">@' + agent + '</span> ' + (task || 'Type task description...') + '</div>';
+    } else {
+      const filtered = AGENTS_LIST.filter(a => a.startsWith(agent));
+      results.innerHTML = filtered.map(a =>
+        '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
+        '<span class="cmd-agent">@' + a + '</span></div>'
+      ).join('') || '<div class="cmd-item">No matching agent</div>';
+    }
+  } else {
+    results.innerHTML = AGENTS_LIST.map(a =>
+      '<div class="cmd-item" onclick="dispatchTask(\'' + a + '\',\'' + query.replace(/'/g,"\\'") + '\')">' +
+      '<span class="cmd-agent">@' + a + '</span> ' + query + '</div>'
+    ).join('');
+  }
+}
+
+function prefillAgent(agent) {
+  const input = document.getElementById('cmd-input');
+  input.value = '@' + agent + ' ';
+  input.focus();
+  renderCmdResults(input.value);
+}
+
+async function dispatchTask(agentId, taskDesc) {
+  if (!taskDesc.trim()) return;
+  closeCmdBar();
+  
+  if (!currentTasks) return;
+  const agent = currentTasks.agents.find(a => a.id === agentId);
+  if (!agent) return;
+  
+  const newTask = {
+    id: 'task-' + Date.now(),
+    title: taskDesc.trim(),
+    progress: 0,
+    priority: 'normal',
+    active: false
+  };
+  
+  if (!agent.task_queue) agent.task_queue = [];
+  agent.task_queue.push(newTask);
+  
+  // If no active task, activate this one
+  if (!agent.task_queue.some(t => t.active)) {
+    newTask.active = true;
+    agent.current_task = newTask.title;
+    agent.progress = 0;
+    if (agent.status === 'idle') agent.status = 'online';
+  }
+  
+  renderAgents(currentTasks.agents);
+  showToast('Dispatched to ' + agent.name);
+  
+  try {
+    await commitTasks('Quick assign: ' + taskDesc + ' to ' + agent.name);
+    await logActivity(agentId, 'task_added', taskDesc);
+  } catch(e) { showToast('Save failed', 5000); }
+}
+
+document.getElementById('cmd-input').addEventListener('input', function() {
+  renderCmdResults(this.value);
+});
+
+document.getElementById('cmd-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeCmdBar();
+  if (e.key === 'Enter') {
+    const match = this.value.match(/^@(\w+)\s+(.+)/);
+    if (match && AGENTS_LIST.includes(match[1].toLowerCase())) {
+      dispatchTask(match[1].toLowerCase(), match[2]);
+    }
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    const overlay = document.getElementById('cmd-overlay');
+    if (overlay.classList.contains('active')) closeCmdBar();
+    else openCmdBar();
+  }
+});
+
+
+let batchSelected = new Set();
+function toggleBatchSelect(agentId, taskId, cb) {
+  const key = agentId + '::' + taskId;
+  if (cb.checked) batchSelected.add(key); else batchSelected.delete(key);
+  const bar = document.getElementById('batch-bar');
+  document.getElementById('batch-count').textContent = batchSelected.size;
+  bar.classList.toggle('active', batchSelected.size > 0);
+}
+function clearBatchSelection() {
+  batchSelected.clear();
+  document.querySelectorAll('.task-check').forEach(c => c.checked = false);
+  document.getElementById('batch-bar').classList.remove('active');
+}
+async function batchComplete() {
+  if (!currentTasks) return;
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) { a.task_queue.splice(i, 1); logActivity(aid, 'completed', 'Batch complete'); }
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch completed');
+  await commitTasks('Batch complete').catch(() => showToast('Save failed', 5000));
+}
+async function batchDelete() {
+  if (!currentTasks) return;
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) a.task_queue.splice(i, 1);
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch deleted');
+  await commitTasks('Batch delete').catch(() => showToast('Save failed', 5000));
+}
+function batchReassign() {
+  if (!currentTasks) return;
+  const names = currentTasks.agents.map(a => a.id).join(', ');
+  const target = prompt('Reassign to: ' + names);
+  if (!target) return;
+  const ta = currentTasks.agents.find(a => a.id === target.toLowerCase());
+  if (!ta) { showToast('Unknown agent'); return; }
+  if (!ta.task_queue) ta.task_queue = [];
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    if (aid === ta.id) continue;
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) { const [t] = a.task_queue.splice(i, 1); t.active = false; ta.task_queue.push(t); }
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Reassigned to ' + ta.name);
+  commitTasks('Batch reassign to ' + ta.name).catch(() => showToast('Save failed', 5000));
+}
+
+
+function renderDependencyGraph(agents) {
+  const svg = document.getElementById('dep-svg');
+  if (!svg) return;
+  
+  // Build dependency map from task data
+  const deps = [];
+  const agentMap = {};
+  const positions = {};
+  const agentIds = agents.map(a => a.id);
+  
+  // Position agents in a circle
+  const cx = 300, cy = 100, rx = 220, ry = 70;
+  agentIds.forEach((id, i) => {
+    const angle = (i / agentIds.length) * Math.PI * 2 - Math.PI / 2;
+    positions[id] = { x: cx + rx * Math.cos(angle), y: cy + ry * Math.sin(angle) };
+    agentMap[id] = agents[i];
+  });
+  
+  // Infer dependencies from task descriptions (mentions of other agents)
+  agents.forEach(a => {
+    const queue = a.task_queue || [];
+    queue.forEach(t => {
+      const title = (t.title || '').toLowerCase();
+      agentIds.forEach(otherId => {
+        if (otherId !== a.id && title.includes(otherId)) {
+          deps.push({ from: a.id, to: otherId, task: t.title, blocked: t.priority === 'high' });
+        }
+      });
+    });
+    // Also check current_task
+    const ct = (a.current_task || '').toLowerCase();
+    agentIds.forEach(otherId => {
+      if (otherId !== a.id && ct.includes(otherId)) {
+        if (!deps.find(d => d.from === a.id && d.to === otherId))
+          deps.push({ from: a.id, to: otherId, task: a.current_task, blocked: false });
+      }
+    });
+  });
+  
+  let html = svg.innerHTML.split('</defs>')[0] + '</defs>';
+  
+  // Draw edges
+  deps.forEach(d => {
+    const from = positions[d.from];
+    const to = positions[d.to];
+    if (!from || !to) return;
+    const mx = (from.x + to.x) / 2;
+    const my = (from.y + to.y) / 2 - 20;
+    html += '<path class="dep-edge' + (d.blocked ? ' blocked' : '') + '" d="M' + from.x + ',' + from.y + ' Q' + mx + ',' + my + ' ' + to.x + ',' + to.y + '"/>';
+  });
+  
+  // Draw nodes
+  agentIds.forEach(id => {
+    const p = positions[id];
+    const a = agentMap[id];
+    const color = AGENT_COLORS[id] || '#666';
+    const statusColor = a.status === 'busy' ? '#fbbf24' : a.status === 'online' ? '#34d399' : a.status === 'offline' ? '#6b7280' : '#9ca3af';
+    html += '<g class="dep-node" onclick="openModal(\'' + id + '\')">';
+    html += '<circle cx="' + p.x + '" cy="' + p.y + '" r="18" fill="' + color + '" opacity="0.2" stroke="' + color + '" stroke-width="2"/>';
+    html += '<circle cx="' + (p.x + 14) + '" cy="' + (p.y - 14) + '" r="4" fill="' + statusColor + '"/>';
+    html += '<text class="dep-label" x="' + p.x + '" y="' + (p.y + 4) + '">' + (a.name || id) + '</text>';
+    html += '</g>';
+  });
+  
+  // Show message if no deps
+  if (deps.length === 0) {
+    html += '<text class="dep-label" x="300" y="190" style="fill:var(--text-tertiary);font-size:10px">No cross-agent dependencies detected in current tasks</text>';
+  }
+  
+  svg.innerHTML = html;
+}
+
+</script>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <h3 id="modal-title" style="margin:0">Edit Agent</h3>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-secondary tab-btn active" onclick="switchTab('edit')" id="tab-edit" style="font-size:11px;padding:4px 10px">Edit</button>
+        <button class="btn btn-secondary tab-btn" onclick="switchTab('reassign')" id="tab-reassign" style="font-size:11px;padding:4px 10px">Reassign</button>
+        <button class="btn btn-secondary tab-btn" onclick="switchTab('new')" id="tab-new" style="font-size:11px;padding:4px 10px">+ New</button>
+      </div>
+    </div>
+
+    <!-- Edit Tab -->
+    <div id="panel-edit">
+      <div class="field">
+        <label>Status</label>
+        <select id="edit-status">
+          <option value="online">Online</option>
+          <option value="busy">Busy</option>
+          <option value="idle">Idle</option>
+          <option value="offline">Offline</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Current Task</label>
+        <input type="text" id="edit-task" placeholder="What are they working on?">
+      </div>
+      <div class="field">
+        <label>Progress</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" id="edit-progress" min="0" max="100" step="5" style="flex:1" oninput="document.getElementById('progress-val').textContent=this.value+'%'">
+          <span id="progress-val" style="font-size:11px;color:var(--text-tertiary);min-width:32px">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reassign Tab -->
+    <div id="panel-reassign" style="display:none">
+      <div class="field">
+        <label>Reassign Task To</label>
+        <select id="reassign-target"></select>
+      </div>
+      <div class="field">
+        <label>Task to Transfer</label>
+        <input type="text" id="reassign-task" readonly style="opacity:0.7">
+      </div>
+      <p style="font-size:11px;color:var(--text-tertiary);margin-top:8px">Current agent will be set to idle. Target agent will receive this task.</p>
+    </div>
+
+    <!-- New Task Tab -->
+    <div id="panel-new" style="display:none">
+      <div class="field">
+        <label>Assign To</label>
+        <select id="new-agent"></select>
+      </div>
+      <div class="field">
+        <label>Task Description</label>
+        <input type="text" id="new-task" placeholder="Describe the task...">
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <select id="new-priority">
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveAction()">Save</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+
+
+function renderTaskQueue(agent) {
+  const queue = agent.task_queue || [];
+  if (queue.length <= 1) return '';
+  return '<div class="task-queue" data-agent="' + agent.id + '">' +
+    queue.map((t, i) => {
+      const isActive = t.active;
+      const priorityTag = t.priority && t.priority !== 'normal'
+        ? '<span class="task-priority ' + t.priority + '">' + t.priority + '</span>'
+        : '';
+      const switchBtn = !isActive
+        ? '<button class="task-switch-btn" onclick="event.stopPropagation();switchTask(\'' + agent.id + '\',' + i + ')">Activate</button>'
+        : '';
+      return '<div class="task-item' + (isActive ? ' active' : '') + '" draggable="true" data-idx="' + i + '"><span class="drag-handle" title="Drag to reorder">⠿</span>' +
+        '<input type="checkbox" class="task-check" onclick="event.stopPropagation();toggleBatchSelect(\'' + agent.id + '\',\'' + t.id + '\',this)">' + '<span class="task-dot ' + (isActive ? 'active' : 'queued') + '"></span>' +
+        '<span class="task-title">' + t.title + '</span>' +
+        priorityTag + switchBtn + '</div>';
+    }).join('') + '</div>';
+}
+
+function switchTask(agentId, idx) {
+  if (!currentTasks) return;
+  const agent = currentTasks.agents.find(a => a.id === agentId);
+  if (!agent || !agent.task_queue) return;
+  agent.task_queue.forEach((t, i) => { t.active = (i === idx); });
+  const active = agent.task_queue[idx];
+  agent.current_task = active.title;
+  agent.progress = active.progress;
+  agent.updated_at = new Date().toISOString();
+  renderAgents(currentTasks.agents);
+  // Auto-save
+  commitTasks('Switch ' + agent.name + ' to: ' + active.title).then(() => {
+    showToast('Switched to: ' + active.title);
+  }).catch(e => showToast('Save failed: ' + e.message, 5000));
+}
+
+// Drag to reorder
+document.addEventListener('dragstart', e => {
+  if (!e.target.classList.contains('task-item')) return;
+  e.target.classList.add('dragging');
+  e.dataTransfer.setData('text/plain', e.target.dataset.idx);
+});
+
+document.addEventListener('dragend', e => {
+  if (e.target.classList.contains('task-item')) e.target.classList.remove('dragging');
+  document.querySelectorAll('.task-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+});
+
+document.addEventListener('dragover', e => {
+  const item = e.target.closest('.task-item');
+  if (!item) return;
+  e.preventDefault();
+  item.classList.add('drag-over');
+});
+
+document.addEventListener('dragleave', e => {
+  const item = e.target.closest('.task-item');
+  if (item) item.classList.remove('drag-over');
+});
+
+document.addEventListener('drop', e => {
+  const target = e.target.closest('.task-item');
+  if (!target) return;
+  e.preventDefault();
+  target.classList.remove('drag-over');
+  const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+  const toIdx = parseInt(target.dataset.idx);
+  const queue = target.closest('.task-queue');
+  if (!queue || fromIdx === toIdx) return;
+  const agentId = queue.dataset.agent;
+  const agent = currentTasks.agents.find(a => a.id === agentId);
+  if (!agent || !agent.task_queue) return;
+  const [moved] = agent.task_queue.splice(fromIdx, 1);
+  agent.task_queue.splice(toIdx, 0, moved);
+  renderAgents(currentTasks.agents);
+  commitTasks('Reorder ' + agent.name + ' tasks').then(() => logActivity(agent.id, 'task_reordered', 'Queue reordered')).catch(e => showToast('Save failed', 5000));
+});
+
+const AGENT_COLORS = {
+  lisa: '#a78bfa',
+  jony: '#60a5fa',
+  jarvis: '#34d399',
+  naomi: '#fbbf24',
+  jennie: '#f472b6'
+};
+
+function renderTrend(events) {
+  const chart = document.getElementById('trend-chart');
+  const legend = document.getElementById('trend-legend');
+  const days = [];
+  const today = new Date();
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const agentIds = [...new Set(events.map(e => e.agent_id))];
+  if (!agentIds.length) agentIds.push('lisa','jony','jarvis','naomi','jennie');
+
+  // Count completed per agent per day
+  const counts = {};
+  days.forEach(d => {
+    counts[d] = {};
+    agentIds.forEach(a => counts[d][a] = 0);
+  });
+
+  events.forEach(e => {
+    const day = e.ts.slice(0, 10);
+    if (counts[day] && counts[day][e.agent_id] !== undefined) {
+      counts[day][e.agent_id]++;
+    }
+  });
+
+  const maxTotal = Math.max(1, ...days.map(d =>
+    agentIds.reduce((s, a) => s + counts[d][a], 0)
+  ));
+
+  chart.innerHTML = days.map(d => {
+    const date = new Date(d + 'T00:00:00');
+    const label = dayNames[date.getDay()];
+    const total = agentIds.reduce((s, a) => s + counts[d][a], 0);
+    const bars = agentIds.map(a => {
+      const h = counts[d][a] > 0 ? Math.max(4, (counts[d][a] / maxTotal) * 80) : 0;
+      return h > 0 ? '<div class="chart-bar" style="height:' + h + 'px;background:' + (AGENT_COLORS[a] || '#666') + '"></div>' : '';
+    }).join('');
+    return '<div class="chart-day">' +
+      (total > 0 ? '<span class="chart-count">' + total + '</span>' : '') +
+      '<div class="chart-bars">' + (bars || '<div class="chart-bar" style="height:2px;background:var(--border)"></div>') + '</div>' +
+      '<span class="chart-label">' + label + '</span></div>';
+  }).join('');
+
+  legend.innerHTML = agentIds.map(a =>
+    '<div class="legend-item"><div class="legend-dot" style="background:' +
+    (AGENT_COLORS[a] || '#666') + '"></div>' + a + '</div>'
+  ).join('');
+}
+
+const REPO = 'codenameagentd-cloud/mission-control-dashboard';
+const BRANCH = 'main';
+let editingAgent = null;
+let currentTasks = null;
+
+let currentTab = 'edit';
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['edit','reassign','new'].forEach(t => {
+    document.getElementById('panel-' + t).style.display = t === tab ? '' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  const btn = document.getElementById('save-btn');
+  btn.textContent = tab === 'reassign' ? 'Reassign' : tab === 'new' ? 'Create' : 'Save';
+}
+
+function openModal(agentId) {
+  const agent = (currentTasks || {agents:[]}).agents.find(a => a.id === agentId);
+  if (!agent) return;
+  editingAgent = agentId;
+  currentTab = 'edit';
+  switchTab('edit');
+  document.getElementById('modal-title').textContent = agent.name;
+  document.getElementById('edit-status').value = agent.status;
+  document.getElementById('edit-task').value = agent.current_task || '';
+  document.getElementById('edit-progress').value = agent.progress;
+  document.getElementById('progress-val').textContent = agent.progress + '%';
+
+  // Populate reassign dropdown (all agents except current)
+  const others = (currentTasks.agents || []).filter(a => a.id !== agentId);
+  document.getElementById('reassign-target').innerHTML = others.map(a =>
+    '<option value="' + a.id + '">' + a.name + '</option>'
+  ).join('');
+  document.getElementById('reassign-task').value = agent.current_task || '';
+
+  // Populate new task agent dropdown
+  document.getElementById('new-agent').innerHTML = (currentTasks.agents || []).map(a =>
+    '<option value="' + a.id + '"' + (a.id === agentId ? ' selected' : '') + '>' + a.name + '</option>'
+  ).join('');
+  document.getElementById('new-task').value = '';
+
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+  editingAgent = null;
+}
+
+function showToast(msg, duration) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration || 3000);
+}
+
+async function saveAction() {
+  if (currentTab === 'edit') return saveEdit();
+  if (currentTab === 'reassign') return saveReassign();
+  if (currentTab === 'new') return saveNewTask();
+}
+
+async function saveReassign() {
+  if (!editingAgent || !currentTasks) return;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Reassigning…';
+  try {
+    const source = currentTasks.agents.find(a => a.id === editingAgent);
+    const targetId = document.getElementById('reassign-target').value;
+    const target = currentTasks.agents.find(a => a.id === targetId);
+    if (!source || !target) throw new Error('Agent not found');
+
+    const task = source.current_task;
+    const progress = source.progress;
+    target.current_task = task;
+    target.progress = progress;
+    target.status = 'busy';
+    target.updated_at = new Date().toISOString();
+    source.current_task = '';
+    source.progress = 0;
+    source.status = 'idle';
+    source.updated_at = new Date().toISOString();
+    currentTasks.generated_at = new Date().toISOString();
+
+    await commitTasks('Reassign: ' + task + ' from ' + source.name + ' to ' + target.name);
+    showToast('Reassigned to ' + target.name);
+    closeModal();
+    setTimeout(refresh, 2000);
+  } catch(e) { showToast('Error: ' + e.message, 5000); }
+  finally { btn.disabled = false; btn.textContent = 'Reassign'; }
+}
+
+async function saveNewTask() {
+  if (!currentTasks) return;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const agentId = document.getElementById('new-agent').value;
+    const agent = currentTasks.agents.find(a => a.id === agentId);
+    const task = document.getElementById('new-task').value.trim();
+    if (!agent || !task) throw new Error('Missing agent or task');
+
+    agent.current_task = task;
+    agent.progress = 0;
+    agent.status = 'busy';
+    agent.updated_at = new Date().toISOString();
+    currentTasks.generated_at = new Date().toISOString();
+
+    await commitTasks('New task for ' + agent.name + ': ' + task);
+    showToast('Task assigned to ' + agent.name);
+    closeModal();
+    setTimeout(refresh, 2000);
+  } catch(e) { showToast('Error: ' + e.message, 5000); }
+  finally { btn.disabled = false; btn.textContent = 'Create'; }
+}
+
+async function commitTasks(message) {
+  const metaRes = await fetch('https://api.github.com/repos/' + REPO + '/contents/data/tasks.json?ref=' + BRANCH, { headers: ghHeaders() });
+  if (!metaRes.ok) throw new Error('Failed to read');
+  const meta = await metaRes.json();
+  const updateRes = await fetch('https://api.github.com/repos/' + REPO + '/contents/data/tasks.json', {
+    method: 'PUT',
+    headers: ghHeaders(),
+    body: JSON.stringify({
+      message: message,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(currentTasks, null, 2)))),
+      sha: meta.sha,
+      branch: BRANCH
+    })
+  });
+  if (!updateRes.ok) throw new Error('Failed to save');
+}
+
+async function saveEdit() {
+  if (!editingAgent || !currentTasks) return;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    const agent = currentTasks.agents.find(a => a.id === editingAgent);
+    agent.status = document.getElementById('edit-status').value;
+    agent.current_task = document.getElementById('edit-task').value;
+    agent.progress = parseInt(document.getElementById('edit-progress').value);
+    agent.updated_at = new Date().toISOString();
+    currentTasks.generated_at = new Date().toISOString();
+
+    await commitTasks('Update ' + agent.name + ': ' + agent.status + ' — ' + (agent.current_task || 'idle'));
+    showToast('Saved — refreshing…');
+    closeModal();
+    setTimeout(refresh, 2000);
+  } catch (e) {
+    showToast('Error: ' + e.message, 5000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+}
+
+function ghHeaders() {
+  const token = localStorage.getItem('gh_token');
+  const h = { 'Accept': 'application/vnd.github.v3+json' };
+  if (token) h['Authorization'] = 'token ' + token;
+  return h;
+}
+
+// Token setup UI - enhanced onboarding
+if (!localStorage.getItem('gh_token')) {
+  const banner = document.createElement('div');
+  banner.id = 'onboarding-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:10px 16px;background:#b45309;color:#fff;text-align:center;z-index:100;font-size:13px;display:flex;align-items:center;justify-content:center;gap:12px;';
+  banner.innerHTML = '⚠️ Viewing sample data — <button onclick="promptToken()" style="background:#fff;color:#b45309;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;font-weight:600;font-size:12px">Connect GitHub</button> to see live agent data';
+  document.body.appendChild(banner);
+  document.body.style.paddingTop = '40px';
+}
+
+function promptToken() {
+  const t = prompt('GitHub Personal Access Token (repo scope):');
+  if (t) { localStorage.setItem('gh_token', t.trim()); location.reload(); }
+}
+
+const AGENTS_LIST = ['lisa','jony','jarvis','naomi','jennie'];
+
+function openCmdBar() {
+  document.getElementById('cmd-overlay').classList.add('active');
+  const input = document.getElementById('cmd-input');
+  input.value = '';
+  input.focus();
+  renderCmdResults('');
+}
+
+function closeCmdBar() {
+  document.getElementById('cmd-overlay').classList.remove('active');
+}
+
+function renderCmdResults(query) {
+  const results = document.getElementById('cmd-results');
+  if (!query.trim()) {
+    results.innerHTML = AGENTS_LIST.map(a =>
+      '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
+      '<span class="cmd-agent">@' + a + '</span> Ready for task</div>'
+    ).join('');
+    return;
+  }
+  
+  const match = query.match(/^@(\w+)\s*(.*)/);
+  if (match) {
+    const agent = match[1].toLowerCase();
+    const task = match[2];
+    if (AGENTS_LIST.includes(agent)) {
+      results.innerHTML = '<div class="cmd-item selected" onclick="dispatchTask(\'' + agent + '\',\'' + (task||'').replace(/'/g,"\\'") + '\')">' +
+        '<span class="cmd-agent">@' + agent + '</span> ' + (task || 'Type task description...') + '</div>';
+    } else {
+      const filtered = AGENTS_LIST.filter(a => a.startsWith(agent));
+      results.innerHTML = filtered.map(a =>
+        '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
+        '<span class="cmd-agent">@' + a + '</span></div>'
+      ).join('') || '<div class="cmd-item">No matching agent</div>';
+    }
+  } else {
+    results.innerHTML = AGENTS_LIST.map(a =>
+      '<div class="cmd-item" onclick="dispatchTask(\'' + a + '\',\'' + query.replace(/'/g,"\\'") + '\')">' +
+      '<span class="cmd-agent">@' + a + '</span> ' + query + '</div>'
+    ).join('');
+  }
+}
+
+function prefillAgent(agent) {
+  const input = document.getElementById('cmd-input');
+  input.value = '@' + agent + ' ';
+  input.focus();
+  renderCmdResults(input.value);
+}
+
+async function dispatchTask(agentId, taskDesc) {
+  if (!taskDesc.trim()) return;
+  closeCmdBar();
+  
+  if (!currentTasks) return;
+  const agent = currentTasks.agents.find(a => a.id === agentId);
+  if (!agent) return;
+  
+  const newTask = {
+    id: 'task-' + Date.now(),
+    title: taskDesc.trim(),
+    progress: 0,
+    priority: 'normal',
+    active: false
+  };
+  
+  if (!agent.task_queue) agent.task_queue = [];
+  agent.task_queue.push(newTask);
+  
+  // If no active task, activate this one
+  if (!agent.task_queue.some(t => t.active)) {
+    newTask.active = true;
+    agent.current_task = newTask.title;
+    agent.progress = 0;
+    if (agent.status === 'idle') agent.status = 'online';
+  }
+  
+  renderAgents(currentTasks.agents);
+  showToast('Dispatched to ' + agent.name);
+  
+  try {
+    await commitTasks('Quick assign: ' + taskDesc + ' to ' + agent.name);
+    await logActivity(agentId, 'task_added', taskDesc);
+  } catch(e) { showToast('Save failed', 5000); }
+}
+
+document.getElementById('cmd-input').addEventListener('input', function() {
+  renderCmdResults(this.value);
+});
+
+document.getElementById('cmd-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeCmdBar();
+  if (e.key === 'Enter') {
+    const match = this.value.match(/^@(\w+)\s+(.+)/);
+    if (match && AGENTS_LIST.includes(match[1].toLowerCase())) {
+      dispatchTask(match[1].toLowerCase(), match[2]);
+    }
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    const overlay = document.getElementById('cmd-overlay');
+    if (overlay.classList.contains('active')) closeCmdBar();
+    else openCmdBar();
+  }
+});
+
+
+let batchSelected = new Set();
+function toggleBatchSelect(agentId, taskId, cb) {
+  const key = agentId + '::' + taskId;
+  if (cb.checked) batchSelected.add(key); else batchSelected.delete(key);
+  const bar = document.getElementById('batch-bar');
+  document.getElementById('batch-count').textContent = batchSelected.size;
+  bar.classList.toggle('active', batchSelected.size > 0);
+}
+function clearBatchSelection() {
+  batchSelected.clear();
+  document.querySelectorAll('.task-check').forEach(c => c.checked = false);
+  document.getElementById('batch-bar').classList.remove('active');
+}
+async function batchComplete() {
+  if (!currentTasks) return;
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) { a.task_queue.splice(i, 1); logActivity(aid, 'completed', 'Batch complete'); }
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch completed');
+  await commitTasks('Batch complete').catch(() => showToast('Save failed', 5000));
+}
+async function batchDelete() {
+  if (!currentTasks) return;
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) a.task_queue.splice(i, 1);
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch deleted');
+  await commitTasks('Batch delete').catch(() => showToast('Save failed', 5000));
+}
+function batchReassign() {
+  if (!currentTasks) return;
+  const names = currentTasks.agents.map(a => a.id).join(', ');
+  const target = prompt('Reassign to: ' + names);
+  if (!target) return;
+  const ta = currentTasks.agents.find(a => a.id === target.toLowerCase());
+  if (!ta) { showToast('Unknown agent'); return; }
+  if (!ta.task_queue) ta.task_queue = [];
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    if (aid === ta.id) continue;
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) { const [t] = a.task_queue.splice(i, 1); t.active = false; ta.task_queue.push(t); }
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Reassigned to ' + ta.name);
+  commitTasks('Batch reassign to ' + ta.name).catch(() => showToast('Save failed', 5000));
+}
+
+
+function renderDependencyGraph(agents) {
+  const svg = document.getElementById('dep-svg');
+  if (!svg) return;
+  
+  // Build dependency map from task data
+  const deps = [];
+  const agentMap = {};
+  const positions = {};
+  const agentIds = agents.map(a => a.id);
+  
+  // Position agents in a circle
+  const cx = 300, cy = 100, rx = 220, ry = 70;
+  agentIds.forEach((id, i) => {
+    const angle = (i / agentIds.length) * Math.PI * 2 - Math.PI / 2;
+    positions[id] = { x: cx + rx * Math.cos(angle), y: cy + ry * Math.sin(angle) };
+    agentMap[id] = agents[i];
+  });
+  
+  // Infer dependencies from task descriptions (mentions of other agents)
+  agents.forEach(a => {
+    const queue = a.task_queue || [];
+    queue.forEach(t => {
+      const title = (t.title || '').toLowerCase();
+      agentIds.forEach(otherId => {
+        if (otherId !== a.id && title.includes(otherId)) {
+          deps.push({ from: a.id, to: otherId, task: t.title, blocked: t.priority === 'high' });
+        }
+      });
+    });
+    // Also check current_task
+    const ct = (a.current_task || '').toLowerCase();
+    agentIds.forEach(otherId => {
+      if (otherId !== a.id && ct.includes(otherId)) {
+        if (!deps.find(d => d.from === a.id && d.to === otherId))
+          deps.push({ from: a.id, to: otherId, task: a.current_task, blocked: false });
+      }
+    });
+  });
+  
+  let html = svg.innerHTML.split('</defs>')[0] + '</defs>';
+  
+  // Draw edges
+  deps.forEach(d => {
+    const from = positions[d.from];
+    const to = positions[d.to];
+    if (!from || !to) return;
+    const mx = (from.x + to.x) / 2;
+    const my = (from.y + to.y) / 2 - 20;
+    html += '<path class="dep-edge' + (d.blocked ? ' blocked' : '') + '" d="M' + from.x + ',' + from.y + ' Q' + mx + ',' + my + ' ' + to.x + ',' + to.y + '"/>';
+  });
+  
+  // Draw nodes
+  agentIds.forEach(id => {
+    const p = positions[id];
+    const a = agentMap[id];
+    const color = AGENT_COLORS[id] || '#666';
+    const statusColor = a.status === 'busy' ? '#fbbf24' : a.status === 'online' ? '#34d399' : a.status === 'offline' ? '#6b7280' : '#9ca3af';
+    html += '<g class="dep-node" onclick="openModal(\'' + id + '\')">';
+    html += '<circle cx="' + p.x + '" cy="' + p.y + '" r="18" fill="' + color + '" opacity="0.2" stroke="' + color + '" stroke-width="2"/>';
+    html += '<circle cx="' + (p.x + 14) + '" cy="' + (p.y - 14) + '" r="4" fill="' + statusColor + '"/>';
+    html += '<text class="dep-label" x="' + p.x + '" y="' + (p.y + 4) + '">' + (a.name || id) + '</text>';
+    html += '</g>';
+  });
+  
+  // Show message if no deps
+  if (deps.length === 0) {
+    html += '<text class="dep-label" x="300" y="190" style="fill:var(--text-tertiary);font-size:10px">No cross-agent dependencies detected in current tasks</text>';
+  }
+  
+  svg.innerHTML = html;
+}
+
+</script>
+
+
+<div class="cmd-overlay" id="cmd-overlay" onclick="if(event.target===this)closeCmdBar()">
+  <div class="cmd-box">
+    <input class="cmd-input" id="cmd-input" placeholder="Type @agent task description... (⌘K)" autocomplete="off">
+    <div class="cmd-results" id="cmd-results"></div>
+    <div class="cmd-hint">⌘K to open · Esc to close · Enter to dispatch · @agent to filter</div>
+  </div>
+</div>
+
+
+<div class="batch-bar" id="batch-bar">
+  <span class="batch-count" id="batch-count">0</span> selected
+  <button onclick="batchReassign()">Reassign</button>
+  <button onclick="batchComplete()">Complete</button>
+  <button class="danger" onclick="batchDelete()">Delete</button>
+  <button onclick="clearBatchSelection()">Cancel</button>
+</div>
+
+<script>
+(function() {
+  let dragItem = null, dragIdx = -1, placeholder = null;
+
+  document.addEventListener('touchstart', function(e) {
+    const item = e.target.closest('.task-item');
+    if (!item) return;
+    dragItem = item;
+    dragIdx = parseInt(item.dataset.idx);
+    item.classList.add('dragging');
+    item.style.opacity = '0.5';
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!dragItem) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const target = el ? el.closest('.task-item') : null;
+    document.querySelectorAll('.task-item.drag-over').forEach(i => i.classList.remove('drag-over'));
+    if (target && target !== dragItem) target.classList.add('drag-over');
+  }, { passive: false });
+
+  document.addEventListener('touchend', function(e) {
+    if (!dragItem) return;
+    dragItem.classList.remove('dragging');
+    dragItem.style.opacity = '';
+    const overItem = document.querySelector('.task-item.drag-over');
+    document.querySelectorAll('.task-item.drag-over').forEach(i => i.classList.remove('drag-over'));
+    if (overItem) {
+      const toIdx = parseInt(overItem.dataset.idx);
+      const queue = overItem.closest('.task-queue');
+      if (queue && dragIdx !== toIdx) {
+        const agentId = queue.dataset.agent;
+        const agent = currentTasks.agents.find(a => a.id === agentId);
+        if (agent && agent.task_queue) {
+          const [moved] = agent.task_queue.splice(dragIdx, 1);
+          agent.task_queue.splice(toIdx, 0, moved);
+          renderAgents(currentTasks.agents);
+          commitTasks('Reorder ' + agent.name + ' tasks').then(() => logActivity(agent.id, 'task_reordered', 'Queue reordered')).catch(e => showToast('Save failed', 5000));
+        }
+      }
+    }
+    dragItem = null;
+    dragIdx = -1;
+  }, { passive: true });
+})();
+
+// Start after all functions defined
+refresh();
+setInterval(refresh, REFRESH_INTERVAL);
+</script>
+</body>
+</html>

@@ -3,926 +3,600 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mission Control</title>
+<title>Mission Control Dashboard</title>
 <style>
-  :root {
-    --bg: #0a0a0a;
-    --surface: #141414;
-    --surface-hover: #1a1a1a;
-    --border: #222;
-    --text-primary: #e8e8e8;
-    --text-secondary: #777;
-    --text-tertiary: #555;
-    --accent: #fff;
-    --online: #34d399;
-    --busy: #f59e0b;
-    --idle: #6b7280;
-    --offline: #374151;
-    --blocked: #ef4444;
-    --radius: 12px;
-    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text-primary);
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .container {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 48px 24px;
-  }
-
-  /* Header */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 48px;
-  }
-
-  .header-left h1 {
-    font-size: 20px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-  }
-
-  .header-left .meta {
-    font-size: 13px;
-    color: var(--text-tertiary);
-    margin-top: 6px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .pulse {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--online);
-    display: inline-block;
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .refresh-btn {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    font-size: 13px;
-    padding: 6px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font);
-  }
-
-  .refresh-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
-  .refresh-btn.loading { opacity: 0.5; pointer-events: none; }
-  .refresh-btn .icon { transition: transform 0.4s ease; }
-  .refresh-btn.loading .icon { animation: spin 0.8s linear infinite; }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Agent Grid */
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 12px;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    transition: background 0.2s ease;
-  }
-
-  .card:hover { background: var(--surface-hover); }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-
-  .agent-name {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-
-  .status-badge {
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 3px 8px;
-    border-radius: 6px;
-    background: var(--offline);
-    color: var(--text-primary);
-  }
-
-  .status-badge.online { background: rgba(52,211,153,0.15); color: var(--online); }
-  .status-badge.busy { background: rgba(245,158,11,0.15); color: var(--busy); animation: breathe 2s ease-in-out infinite; }
-  .status-badge.idle { background: rgba(107,114,128,0.15); color: var(--idle); }
-  .status-badge.offline { background: rgba(55,65,81,0.3); color: var(--text-tertiary); }
-
-  @keyframes breathe {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-  }
-
-  .task-label {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-bottom: 10px;
-    min-height: 18px;
-  }
-
-  .progress-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  .progress-bar {
-    flex: 1;
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: var(--text-secondary);
-    border-radius: 2px;
-    transition: width 0.6s ease;
-  }
-
-  .progress-pct {
-    font-size: 11px;
-    color: var(--text-tertiary);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-    color: var(--text-tertiary);
-  }
-
-  .completed-count {
-    background: rgba(52,211,153,0.1);
-    color: var(--online);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 10px;
-  }
-
-  /* Timeline Section */
-  .timeline-section {
-    margin-top: 48px;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-
-  .section-header h2 {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    letter-spacing: -0.01em;
-  }
-
-  .timeline {
-    position: relative;
-    padding-left: 20px;
-  }
-
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 4px;
-    top: 8px;
-    bottom: 8px;
-    width: 1px;
-    background: var(--border);
-  }
-
-  .timeline-item {
-    position: relative;
-    padding: 0 0 20px 20px;
-    font-size: 13px;
-  }
-
-  .timeline-item:last-child { padding-bottom: 0; }
-
-  .timeline-dot {
-    position: absolute;
-    left: -17px;
-    top: 6px;
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-  }
-
-  .timeline-dot.started { background: var(--online); }
-  .timeline-dot.completed { background: var(--online); }
-  .timeline-dot.updated { background: var(--busy); }
-  .timeline-dot.blocked { background: var(--blocked); }
-  .timeline-dot.note { background: var(--idle); }
-
-  .timeline-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-  }
-
-  .timeline-time {
-    font-size: 11px;
-    color: var(--text-tertiary);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .timeline-agent {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary);
-  }
-
-  .timeline-type {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 1px 5px;
-    border-radius: 3px;
-  }
-
-  .timeline-type.started { background: rgba(52,211,153,0.15); color: var(--online); }
-  .timeline-type.completed { background: rgba(52,211,153,0.15); color: var(--online); }
-  .timeline-type.updated { background: rgba(245,158,11,0.12); color: var(--busy); }
-  .timeline-type.blocked { background: rgba(239,68,68,0.15); color: var(--blocked); }
-  .timeline-type.note { background: rgba(107,114,128,0.15); color: var(--idle); }
-
-  .timeline-summary {
-    color: var(--text-primary);
-  }
-
-  .empty {
-    color: var(--text-tertiary);
-    font-size: 13px;
-    text-align: center;
-    padding: 48px 0;
-  }
-
-  @media (max-width: 640px) {
-    .container { padding: 32px 16px; }
-    .grid { grid-template-columns: 1fr; }
-    header { flex-direction: column; align-items: flex-start; gap: 16px; }
-  }
-
-
-  /* Trend Chart */
-  .trend-section {
-    margin-top: 48px;
-  }
-
-  .chart-container {
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-    height: 120px;
-    padding: 16px 0;
-  }
-
-  .chart-day {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    height: 100%;
-    justify-content: flex-end;
-  }
-
-  .chart-bars {
-    display: flex;
-    gap: 2px;
-    align-items: flex-end;
-    flex: 1;
-    width: 100%;
-    justify-content: center;
-  }
-
-  .chart-bar {
-    width: 8px;
-    min-height: 2px;
-    border-radius: 2px;
-    transition: height 0.4s ease;
-  }
-
-  .chart-label {
-    font-size: 10px;
-    color: var(--text-tertiary);
-    letter-spacing: 0.02em;
-  }
-
-  .chart-count {
-    font-size: 10px;
-    color: var(--text-secondary);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .trend-legend {
-    display: flex;
-    gap: 16px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--text-tertiary);
-  }
-
-  .legend-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-  }
-
-
-
-  /* Task Queue */
-  .task-queue {
-    margin-top: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .task-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 11px;
-    cursor: grab;
-    transition: all 0.2s;
-    border: 1px solid transparent;
-  }
-
-  .task-item:hover { background: var(--surface-hover); }
-  .task-item.active { border-color: var(--border); background: var(--surface-hover); }
-  .task-item.dragging { opacity: 0.5; }
-  .task-item.drag-over { border-color: var(--text-tertiary); }
-
-  .task-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .task-dot.active { background: #34d399; }
-  .task-dot.queued { background: var(--text-tertiary); }
-
-  .task-title { flex: 1; color: var(--text-secondary); }
-  .task-item.active .task-title { color: var(--text-primary); }
-
-  .task-priority {
-    font-size: 9px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .task-priority.high { background: rgba(239,68,68,0.15); color: #ef4444; }
-  .task-priority.low { background: rgba(156,163,175,0.15); color: #9ca3af; }
-
-  .task-switch-btn {
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-tertiary);
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .task-item:hover .task-switch-btn { opacity: 1; }
-
-  .tab-btn.active {
-    background: var(--text-primary);
-    color: var(--bg);
-    border-color: var(--text-primary);
-  }
-
-  /* Edit Modal */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-  }
-
-  .modal-overlay.active { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 32px;
-    width: 380px;
-    max-width: 90vw;
-  }
-
-  .modal h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 24px;
-    letter-spacing: -0.02em;
-  }
-
-  .field {
-    margin-bottom: 16px;
-  }
-
-  .field label {
-    display: block;
-    font-size: 11px;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 6px;
-  }
-
-  .field input, .field select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    font-size: 13px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-family: var(--font);
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .field input:focus, .field select:focus {
-    border-color: var(--text-tertiary);
-  }
-
-  .modal-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    margin-top: 24px;
-  }
-
-  .btn {
-    font-size: 13px;
-    padding: 6px 16px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    font-family: var(--font);
-    transition: all 0.2s;
-  }
-
-  .btn-secondary {
-    background: var(--surface);
-    color: var(--text-secondary);
-  }
-
-  .btn-secondary:hover { background: var(--surface-hover); }
-
-  .btn-primary {
-    background: var(--text-primary);
-    color: var(--bg);
-    border-color: var(--text-primary);
-  }
-
-  .btn-primary:hover { opacity: 0.9; }
-  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 16px;
-    font-size: 13px;
-    color: var(--text-primary);
-    z-index: 200;
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.3s ease;
-  }
-
-  .toast.show { opacity: 1; transform: translateY(0); }
-
-  .card { cursor: pointer; }
-
-
-  .sla-alert {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 11px;
-    color: #f87171;
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .sla-alert::before {
-    content: '⏰';
-  }
-
-
-  .cmd-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 2000;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 20vh;
-  }
-  .cmd-overlay.active { display: flex; }
-  .cmd-box {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 500px;
-    max-width: 90vw;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  }
-  .cmd-input {
-    width: 100%;
-    padding: 16px 20px;
-    background: transparent;
-    border: none;
-    color: var(--text);
-    font-size: 16px;
-    outline: none;
-    border-bottom: 1px solid var(--border);
-  }
-  .cmd-input::placeholder { color: var(--text-tertiary); }
-  .cmd-results {
-    max-height: 240px;
-    overflow-y: auto;
-    padding: 8px;
-  }
-  .cmd-item {
-    padding: 10px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-  .cmd-item:hover, .cmd-item.selected {
-    background: rgba(96,165,250,0.15);
-    color: var(--text);
-  }
-  .cmd-item .cmd-agent {
-    font-weight: 600;
-    color: var(--text);
-    min-width: 60px;
-  }
-  .cmd-hint {
-    padding: 8px 12px;
-    font-size: 11px;
-    color: var(--text-tertiary);
-    border-top: 1px solid var(--border);
-  }
-
-
-  .batch-bar {
-    display: none;
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 16px;
-    gap: 10px;
-    align-items: center;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    z-index: 1500;
-    font-size: 13px;
-  }
-  .batch-bar.active { display: flex; }
-  .batch-bar .batch-count { color: var(--text); font-weight: 600; margin-right: 4px; }
-  .batch-bar button {
-    padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
-    background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px;
-  }
-  .batch-bar button:hover { background: rgba(96,165,250,0.15); color: var(--text); }
-  .batch-bar button.danger:hover { background: rgba(239,68,68,0.15); color: #f87171; }
-  .task-check { width: 14px; height: 14px; accent-color: #60a5fa; cursor: pointer; flex-shrink: 0; }
-
-
-  .dep-graph {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    margin-top: 16px;
-  }
-  .dep-graph h2 { font-size: 14px; margin: 0 0 16px; color: var(--text); }
-  .dep-graph svg { width: 100%; height: 200px; }
-  .dep-node {
-    cursor: pointer;
-  }
-  .dep-node circle { transition: all 0.2s; }
-  .dep-node:hover circle { r: 22; }
-  .dep-edge { stroke: var(--border); stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
-  .dep-edge.blocked { stroke: #f87171; stroke-dasharray: 4,3; }
-  .dep-label { font-size: 11px; fill: var(--text); text-anchor: middle; pointer-events: none; }
-
-  .drag-handle { cursor: grab; opacity: 0.4; margin-right: 8px; font-size: 14px; user-select: none; }
-  .drag-handle:hover { opacity: 0.8; }
-  .task-item:active .drag-handle { cursor: grabbing; }
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --card: #1a1a25;
+  --border: #2a2a3a;
+  --text: #e0e0e8;
+  --text-secondary: #8888a0;
+  --text-tertiary: #55556a;
+  --accent: #6366f1;
+  --accent-glow: rgba(99,102,241,0.15);
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --orange: #f97316;
+  --pink: #ec4899;
+  --cyan: #06b6d4;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+/* Header */
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.header h1 span { color: var(--accent); }
+.header-actions { display: flex; gap: 10px; align-items: center; }
+.header-actions button { background: var(--card); border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+.header-actions button:hover { border-color: var(--accent); color: var(--text); }
+#refresh-status { font-size: 11px; color: var(--text-tertiary); }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--surface); border-radius: 10px; padding: 4px; border: 1px solid var(--border); }
+.tab { flex: 1; padding: 10px 16px; text-align: center; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; }
+.tab.active { background: var(--accent); color: #fff; }
+.tab:hover:not(.active) { color: var(--text); background: var(--card); }
+
+/* Tab content */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Overview Tab */
+.overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); }
+.stat-card h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-tertiary); margin-bottom: 8px; }
+.stat-card .value { font-size: 32px; font-weight: 700; }
+.stat-card .sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+.overview-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Agent cards */
+.agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.agent-card { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.agent-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.agent-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.agent-card[data-agent="lisa"]::before { background: var(--pink); }
+.agent-card[data-agent="jony"]::before { background: var(--accent); }
+.agent-card[data-agent="jarvis"]::before { background: var(--green); }
+.agent-card[data-agent="naomi"]::before { background: var(--orange); }
+.agent-card[data-agent="jennie"]::before { background: var(--cyan); }
+
+.agent-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.agent-name { font-weight: 600; font-size: 15px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.busy { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); animation: pulse 2s infinite; }
+.status-dot.idle { background: var(--text-tertiary); }
+.status-dot.offline { background: var(--red); }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+.agent-task { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent-model { font-size: 11px; color: var(--text-tertiary); margin-bottom: 8px; }
+.agent-model span { color: var(--accent); font-weight: 500; }
+.progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.agent-card[data-agent="lisa"] .progress-fill { background: var(--pink); }
+.agent-card[data-agent="jony"] .progress-fill { background: var(--accent); }
+.agent-card[data-agent="jarvis"] .progress-fill { background: var(--green); }
+.agent-card[data-agent="naomi"] .progress-fill { background: var(--orange); }
+.agent-card[data-agent="jennie"] .progress-fill { background: var(--cyan); }
+.progress-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-tertiary); margin-top: 4px; }
+.tasks-completed { font-size: 11px; color: var(--text-tertiary); margin-top: 8px; }
+.tasks-completed span { color: var(--text-secondary); font-weight: 500; }
+
+/* Recent Activity */
+.activity-panel { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+.activity-panel h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.activity-list { max-height: 300px; overflow-y: auto; }
+.activity-list::-webkit-scrollbar { width: 4px; }
+.activity-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.activity-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.activity-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+.activity-body { flex: 1; }
+.activity-agent { font-size: 12px; font-weight: 600; }
+.activity-text { font-size: 12px; color: var(--text-secondary); }
+.activity-time { font-size: 10px; color: var(--text-tertiary); }
+.activity-model-tag { font-size: 10px; color: var(--accent); background: var(--accent-glow); padding: 1px 6px; border-radius: 4px; }
+
+/* Task Stats */
+.task-stats { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+.task-stats h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+.stat-row .label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+.stat-row .label .dot { width: 6px; height: 6px; border-radius: 50%; }
+.stat-row .count { font-size: 14px; font-weight: 600; }
+
+/* 7-Day Chart */
+.chart-section { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+.chart-section h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.chart-container { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
+.chart-day { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; height: 100%; justify-content: flex-end; }
+.chart-bar-stack { display: flex; flex-direction: column-reverse; gap: 1px; width: 100%; align-items: center; }
+.chart-bar { width: 70%; border-radius: 2px; min-height: 0; transition: height 0.3s; }
+.chart-label { font-size: 9px; color: var(--text-tertiary); margin-top: 4px; }
+.chart-legend { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+.chart-legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-tertiary); }
+.chart-legend-item .swatch { width: 8px; height: 8px; border-radius: 2px; }
+
+/* Model Tracker */
+.model-tracker { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+.model-tracker h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.model-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.model-row:last-child { border-bottom: none; }
+.model-name { font-size: 12px; color: var(--text-secondary); }
+.model-agent { font-size: 11px; color: var(--accent); }
+
+/* Agents Tab */
+.agents-tab-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.agent-detail-card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); display: grid; grid-template-columns: 200px 1fr; gap: 20px; }
+.agent-detail-left { }
+.agent-detail-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.agent-detail-role { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+.agent-detail-meta { font-size: 11px; color: var(--text-tertiary); }
+.agent-detail-meta div { margin-bottom: 4px; }
+.agent-detail-meta span { color: var(--text-secondary); }
+.agent-detail-right { }
+.agent-task-list { display: flex; flex-direction: column; gap: 8px; }
+.agent-task-item { background: var(--surface); border-radius: 8px; padding: 10px 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.agent-task-item.active { border-color: var(--accent); background: var(--accent-glow); }
+.task-title { font-size: 13px; }
+.task-priority { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+.task-priority.HIGH { background: rgba(239,68,68,0.15); color: var(--red); }
+.task-priority.LOW { background: rgba(34,197,94,0.15); color: var(--green); }
+.task-priority.normal { background: rgba(136,136,160,0.15); color: var(--text-secondary); }
+
+/* Tasks Tab - Kanban */
+.kanban { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.kanban-column { background: var(--surface); border-radius: 12px; padding: 16px; border: 1px solid var(--border); min-height: 400px; }
+.kanban-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.kanban-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.kanban-count { background: var(--card); padding: 2px 8px; border-radius: 10px; font-size: 11px; color: var(--text-secondary); }
+.kanban-title .dot { width: 8px; height: 8px; border-radius: 50%; }
+.kanban-column[data-status="todo"] .kanban-title .dot { background: var(--blue); }
+.kanban-column[data-status="doing"] .kanban-title .dot { background: var(--yellow); }
+.kanban-column[data-status="done"] .kanban-title .dot { background: var(--green); }
+
+.kanban-items { display: flex; flex-direction: column; gap: 8px; min-height: 100px; }
+.kanban-card { background: var(--card); border-radius: 8px; padding: 12px; border: 1px solid var(--border); cursor: grab; transition: all 0.2s; }
+.kanban-card:hover { border-color: var(--accent); }
+.kanban-card.dragging { opacity: 0.5; }
+.kanban-card-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.kanban-card-meta { display: flex; justify-content: space-between; align-items: center; }
+.kanban-card-category { font-size: 10px; padding: 2px 8px; border-radius: 4px; }
+.kanban-card-category.work { background: rgba(99,102,241,0.15); color: var(--accent); }
+.kanban-card-category.marketing { background: rgba(236,72,153,0.15); color: var(--pink); }
+.kanban-card-category.development { background: rgba(34,197,94,0.15); color: var(--green); }
+.kanban-card-category.personal { background: rgba(234,179,8,0.15); color: var(--yellow); }
+.kanban-card-date { font-size: 10px; color: var(--text-tertiary); }
+.kanban-card-assignee { font-size: 10px; color: var(--text-secondary); margin-top: 6px; }
+
+.add-task-btn { width: 100%; padding: 8px; background: transparent; border: 1px dashed var(--border); border-radius: 8px; color: var(--text-tertiary); font-size: 12px; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+.add-task-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Add Task Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.active { display: flex; }
+.modal { background: var(--card); border-radius: 12px; padding: 24px; width: 400px; max-width: 90vw; border: 1px solid var(--border); }
+.modal h2 { font-size: 16px; margin-bottom: 16px; }
+.modal label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; margin-top: 12px; }
+.modal input, .modal select, .modal textarea { width: 100%; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; }
+.modal textarea { min-height: 60px; resize: vertical; }
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+.modal-actions button { padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-secondary { background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border) !important; }
+.btn-danger { background: var(--red); color: #fff; }
+
+/* Onboarding */
+.onboarding-banner { position: fixed; top: 0; left: 0; right: 0; padding: 10px 16px; background: #b45309; color: #fff; text-align: center; z-index: 100; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+.onboarding-banner button { background: #fff; color: #b45309; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .overview-grid { grid-template-columns: 1fr; }
+  .overview-bottom { grid-template-columns: 1fr; }
+  .kanban { grid-template-columns: 1fr; }
+  .agent-detail-card { grid-template-columns: 1fr; }
+  .agents-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .agents-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
+
+<div id="onboarding"></div>
+
 <div class="container">
-  <header>
-    <div class="header-left">
-      <h1>Mission Control</h1>
-      <div class="meta">
-        <span class="pulse"></span>
-        <span id="refresh-status">Loading…</span>
-      </div>
+  <div class="header">
+    <h1>🎯 Mission <span>Control</span></h1>
+    <div class="header-actions">
+      <span id="refresh-status"></span>
+      <button onclick="manualRefresh()" id="refresh-btn">↻ Refresh</button>
     </div>
-    <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">
-      <span class="icon">↻</span> Refresh
-    </button>
-  </header>
-
-  <div class="grid" id="agent-grid"></div>
-
-  
-  <div class="trend-section">
-    <div class="section-header">
-      <h2>7-Day Activity</h2>
-    </div>
-    <div class="chart-container" id="trend-chart"></div>
-    <div class="trend-legend" id="trend-legend"></div>
   </div>
 
-  <div class="timeline-section">
-    <div class="section-header">
-      <h2>Activity Timeline</h2>
+  <div class="tabs">
+    <div class="tab active" data-tab="overview">Overview</div>
+    <div class="tab" data-tab="agents">Agents</div>
+    <div class="tab" data-tab="tasks">Tasks</div>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div class="tab-content active" id="tab-overview">
+    <div class="overview-grid">
+      <div class="stat-card">
+        <h3>Active Agents</h3>
+        <div class="value" id="stat-active">0</div>
+        <div class="sub" id="stat-active-sub">of 5 agents online</div>
+      </div>
+      <div class="stat-card">
+        <h3>Tasks Today</h3>
+        <div class="value" id="stat-tasks">0</div>
+        <div class="sub" id="stat-tasks-sub">completed today</div>
+      </div>
     </div>
-    <div class="timeline" id="timeline">
-      <div class="empty">Loading…</div>
+
+    <div id="agents-overview" class="agents-grid" style="margin-bottom: 24px;"></div>
+
+    <div class="overview-bottom">
+      <div class="activity-panel">
+        <h3>Recent Activity</h3>
+        <div class="activity-list" id="activity-list"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="task-stats">
+          <h3>Task Statistics</h3>
+          <div id="task-stats-body"></div>
+        </div>
+        <div class="model-tracker">
+          <h3>Model Tracker</h3>
+          <div id="model-tracker-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;">
+      <div class="chart-section">
+        <h3>7-Day Activity</h3>
+        <div class="chart-container" id="trend-chart"></div>
+        <div class="chart-legend" id="trend-legend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENTS TAB -->
+  <div class="tab-content" id="tab-agents">
+    <div class="agents-tab-grid" id="agents-detail"></div>
+  </div>
+
+  <!-- TASKS TAB (Kanban) -->
+  <div class="tab-content" id="tab-tasks">
+    <div class="kanban">
+      <div class="kanban-column" data-status="todo" ondrop="kanbanDrop(event)" ondragover="event.preventDefault()">
+        <div class="kanban-header">
+          <div class="kanban-title"><div class="dot"></div> To Do <span class="kanban-count" id="count-todo">0</span></div>
+          <button class="add-task-btn" onclick="openAddTask('todo')" style="width:auto;padding:4px 10px;margin:0;">+</button>
+        </div>
+        <div class="kanban-items" id="kanban-todo"></div>
+      </div>
+      <div class="kanban-column" data-status="doing" ondrop="kanbanDrop(event)" ondragover="event.preventDefault()">
+        <div class="kanban-header">
+          <div class="kanban-title"><div class="dot"></div> Doing <span class="kanban-count" id="count-doing">0</span></div>
+        </div>
+        <div class="kanban-items" id="kanban-doing"></div>
+      </div>
+      <div class="kanban-column" data-status="done" ondrop="kanbanDrop(event)" ondragover="event.preventDefault()">
+        <div class="kanban-header">
+          <div class="kanban-title"><div class="dot"></div> Done <span class="kanban-count" id="count-done">0</span></div>
+        </div>
+        <div class="kanban-items" id="kanban-done"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="add-task-modal">
+  <div class="modal">
+    <h2>Add Task</h2>
+    <label>Title</label>
+    <input type="text" id="new-task-title" placeholder="Task title...">
+    <label>Category</label>
+    <select id="new-task-category">
+      <option value="work">Work</option>
+      <option value="development">Development</option>
+      <option value="marketing">Marketing</option>
+      <option value="personal">Personal</option>
+    </select>
+    <label>Assignee (optional)</label>
+    <select id="new-task-assignee">
+      <option value="">Unassigned</option>
+      <option value="lisa">Lisa</option>
+      <option value="jony">Jony</option>
+      <option value="jarvis">Jarvis</option>
+      <option value="naomi">Naomi</option>
+      <option value="jennie">Jennie</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAddTask()">Cancel</button>
+      <button class="btn-primary" onclick="addTask()">Add</button>
     </div>
   </div>
 </div>
 
 <script>
-const DATA_BASE = 'data/';
 const REFRESH_INTERVAL = 30000;
+const REPO = 'codenameagentd-cloud/mission-control-dashboard';
+const AGENT_ROLES = { lisa: 'QA Lead', jony: 'Design Director', jarvis: 'System Admin', naomi: 'Product Lead', jennie: 'Life Assistant' };
+const AGENT_MODELS = { lisa: 'claude-opus-4', jony: 'claude-opus-4', jarvis: 'claude-opus-4', naomi: 'claude-opus-4', jennie: 'claude-opus-4' };
+const AGENT_COLORS = { lisa: '#ec4899', jony: '#6366f1', jarvis: '#22c55e', naomi: '#f97316', jennie: '#06b6d4' };
+
+let agentsData = [];
 let activitiesData = [];
+let kanbanTasks = JSON.parse(localStorage.getItem('kanban_tasks') || '[]');
 
-function relativeTime(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return mins + 'm ago';
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return hrs + 'h ago';
-  return Math.floor(hrs / 24) + 'd ago';
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+function ghHeaders() {
+  const token = localStorage.getItem('gh_token');
+  const h = { 'Accept': 'application/vnd.github.v3+json' };
+  if (token) h['Authorization'] = 'token ' + token;
+  return h;
 }
 
-function formatTime(dateStr) {
-  return new Date(dateStr).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-}
-
-function countCompleted(agentId) {
-  const today = new Date().toISOString().slice(0, 10);
-  return activitiesData.filter(e =>
-    e.agent_id === agentId && e.type === 'completed' && e.ts.startsWith(today)
-  ).length;
-}
-
-function renderAgents(agents) {
-  const grid = document.getElementById('agent-grid');
-  grid.innerHTML = agents.map(a => {
-    const done = countCompleted(a.id);
-    const doneTag = done > 0
-      ? `<span class="completed-count">${done} done today</span>`
-      : '';
-    return `
-    <div class="card" onclick="openModal('${a.id}')">
-      <div class="card-header">
-        <span class="agent-name">${a.name}</span>
-        <span class="status-badge ${a.status}">${a.status}</span>
-      </div>
-      <div class="task-label">${a.current_task || 'No active task'}</div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:10px;color:var(--text-tertiary)">Task progress</span>
-        <span style="font-size:10px;color:var(--text-tertiary)">${(a.task_queue||[]).length||1} task${(a.task_queue||[]).length!==1?'s':''} · ${(a.task_queue||[]).filter(t=>t.active).length||1} active</span>
-      </div>
-      <div class="progress-row">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${a.progress}%"></div>
-        </div>
-        <span class="progress-pct">${a.progress}%</span>
-      </div>
-      <div class="card-footer">
-        <span>${relativeTime(a.updated_at)}</span>
-        ${doneTag}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderTimeline(events) {
-  const el = document.getElementById('timeline');
-  const recent = events.slice(-20).reverse();
-  if (!recent.length) {
-    el.innerHTML = '<div class="empty">No activity yet</div>';
-    return;
-  }
-  el.innerHTML = recent.map(e => `
-    <div class="timeline-item">
-      <div class="timeline-dot ${e.type}"></div>
-      <div class="timeline-meta">
-        <span class="timeline-time">${formatTime(e.ts)}</span>
-        <span class="timeline-agent">${e.agent_id}</span>
-        <span class="timeline-type ${e.type}">${e.type}</span>
-      </div>
-      <div class="timeline-summary">${e.summary}</div>
-    </div>
-  `).join('');
-}
-
-async function fetchJSON(path) {
-  const res = await fetch(path + '?t=' + Date.now());
-  if (!res.ok) throw new Error(res.status);
-  return res.json();
+function timeAgo(ts) {
+  const d = (Date.now() - new Date(ts).getTime()) / 1000;
+  if (d < 60) return 'just now';
+  if (d < 3600) return Math.floor(d/60) + 'm ago';
+  if (d < 86400) return Math.floor(d/3600) + 'h ago';
+  return Math.floor(d/86400) + 'd ago';
 }
 
 async function refresh() {
   try {
-    const [tasks, activities] = await Promise.all([
-      fetchJSON(DATA_BASE + 'tasks.json'),
-      fetchJSON(DATA_BASE + 'activities.json')
+    const [tasksRes, actRes] = await Promise.all([
+      fetch(`https://api.github.com/repos/${REPO}/contents/data/tasks.json`, { headers: ghHeaders() }),
+      fetch(`https://api.github.com/repos/${REPO}/contents/data/activities.json`, { headers: ghHeaders() })
     ]);
-    activitiesData = activities.events || [];
-    currentTasks = tasks;
-    renderAgents(tasks.agents || []);
-    // Inject task queues into cards
-    document.querySelectorAll('.card').forEach(card => {
-      const onclick = card.getAttribute('onclick');
-      if (!onclick) return;
-      const match = onclick.match(/openModal\('(\w+)'\)/);
-      if (!match) return;
-      const agent = (currentTasks || {agents:[]}).agents.find(a => a.id === match[1]);
-      if (agent && agent.task_queue && agent.task_queue.length > 0) {
-        card.insertAdjacentHTML('beforeend', renderTaskQueue(agent));
-      }
-    });
-
-    checkSLA(currentTasks.agents);
-    renderDependencyGraph(currentTasks.agents);
-    renderTimeline(activitiesData);
-    renderTrend(activitiesData);
-    document.getElementById('refresh-status').textContent =
-      'Updated ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  } catch (e) {
-    document.getElementById('refresh-status').textContent = 'Using sample data';
+    const tasksJson = JSON.parse(atob((await tasksRes.json()).content));
+    const actJson = JSON.parse(atob((await actRes.json()).content));
+    agentsData = tasksJson.agents || [];
+    activitiesData = actJson.events || actJson || [];
+    document.getElementById('refresh-status').textContent = 'Live · ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    agentsData = sampleAgents;
     activitiesData = sampleEvents;
-    try { renderAgents(sampleAgents); } catch(e2) { console.error('renderAgents:', e2); }
-    try { checkSLA(sampleAgents); } catch(e2) {}
-    try { renderDependencyGraph(sampleAgents); } catch(e2) {}
-    try { renderTimeline(sampleEvents); } catch(e2) {}
-    try { renderTrend(sampleEvents); } catch(e2) { console.error('renderTrend:', e2); }
+    document.getElementById('refresh-status').textContent = 'Using sample data';
   }
+  try { renderOverview(); } catch(e) { console.error('renderOverview:', e); }
+  try { renderAgentsTab(); } catch(e) { console.error('renderAgentsTab:', e); }
+  try { renderTrend(activitiesData); } catch(e) { console.error('renderTrend:', e); }
+  renderKanban();
 }
 
+function renderOverview() {
+  const agents = agentsData;
+  const active = agents.filter(a => a.status === 'online' || a.status === 'busy').length;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-active-sub').textContent = `of ${agents.length} agents online`;
 
-function checkSLA(agents) {
-  const now = Date.now();
-  const SLA_HOURS = 2;
+  const today = new Date().toISOString().split('T')[0];
+  const todayCompleted = activitiesData.filter(e => e.ts && e.ts.startsWith(today) && e.type === 'completed').length;
+  document.getElementById('stat-tasks').textContent = todayCompleted;
+  document.getElementById('stat-tasks-sub').textContent = 'completed today';
+
+  // Agent cards
+  let html = '';
   agents.forEach(a => {
-    const card = document.querySelector('.card[onclick*="' + a.id + '"]');
-    if (!card) return;
-    // Remove old alert
-    const old = card.querySelector('.sla-alert');
-    if (old) old.remove();
-    
-    if (a.status === 'offline' || a.status === 'idle') return;
-    const updated = new Date(a.updated_at).getTime();
-    const hoursAgo = (now - updated) / (1000 * 60 * 60);
-    if (hoursAgo > SLA_HOURS) {
-      const alert = document.createElement('div');
-      alert.className = 'sla-alert';
-      alert.textContent = 'No update for ' + Math.floor(hoursAgo) + 'h — may be stalled';
-      card.appendChild(alert);
-    }
+    const queue = a.task_queue || [];
+    const activeTask = queue.find(t => t.active) || {};
+    const progress = activeTask.progress || a.progress || 0;
+    const completedCount = queue.filter(t => t.progress === 100).length;
+    html += `
+    <div class="agent-card" data-agent="${a.id}">
+      <div class="agent-header">
+        <span class="agent-name">${a.name}</span>
+        <span class="status-dot ${a.status}"></span>
+      </div>
+      <div class="agent-task">${activeTask.title || a.current_task || 'No active task'}</div>
+      <div class="agent-model">Model: <span>${AGENT_MODELS[a.id] || 'unknown'}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+      <div class="progress-label"><span>Progress</span><span>${progress}%</span></div>
+      <div class="tasks-completed">Completed: <span>${completedCount}</span> · Total: <span>${queue.length}</span></div>
+    </div>`;
+  });
+  document.getElementById('agents-overview').innerHTML = html;
+
+  // Activity list
+  const events = activitiesData.slice(0, 15);
+  let actHtml = '';
+  events.forEach(e => {
+    const color = AGENT_COLORS[e.agent_id] || '#888';
+    actHtml += `
+    <div class="activity-item">
+      <div class="activity-dot" style="background:${color}"></div>
+      <div class="activity-body">
+        <div class="activity-agent">${e.agent_id || 'unknown'} <span class="activity-model-tag">${AGENT_MODELS[e.agent_id] || ''}</span></div>
+        <div class="activity-text">${e.summary || e.type || ''}</div>
+        <div class="activity-time">${e.ts ? timeAgo(e.ts) : ''}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('activity-list').innerHTML = actHtml || '<div style="color:var(--text-tertiary);font-size:12px">No recent activity</div>';
+
+  // Task statistics
+  let totalTasks = 0, activeTasks = 0, completedTasks = 0;
+  agents.forEach(a => {
+    const q = a.task_queue || [];
+    totalTasks += q.length;
+    activeTasks += q.filter(t => t.active).length;
+    completedTasks += q.filter(t => t.progress === 100).length;
+  });
+  document.getElementById('task-stats-body').innerHTML = `
+    <div class="stat-row"><div class="label"><div class="dot" style="background:var(--blue)"></div> Total Tasks</div><div class="count">${totalTasks}</div></div>
+    <div class="stat-row"><div class="label"><div class="dot" style="background:var(--yellow)"></div> Active</div><div class="count">${activeTasks}</div></div>
+    <div class="stat-row"><div class="label"><div class="dot" style="background:var(--green)"></div> Completed</div><div class="count">${completedTasks}</div></div>
+    <div class="stat-row"><div class="label"><div class="dot" style="background:var(--text-tertiary)"></div> Pending</div><div class="count">${totalTasks - activeTasks - completedTasks}</div></div>
+  `;
+
+  // Model tracker
+  let modelHtml = '';
+  agents.forEach(a => {
+    modelHtml += `<div class="model-row"><div class="model-name">${a.name}</div><div class="model-agent">${AGENT_MODELS[a.id] || 'unknown'}</div></div>`;
+  });
+  document.getElementById('model-tracker-body').innerHTML = modelHtml;
+}
+
+function renderAgentsTab() {
+  let html = '';
+  agentsData.forEach(a => {
+    const queue = a.task_queue || [];
+    let tasksHtml = '';
+    queue.forEach(t => {
+      const pClass = (t.priority || 'normal').toUpperCase();
+      tasksHtml += `
+      <div class="agent-task-item ${t.active ? 'active' : ''}">
+        <div>
+          <div class="task-title">${t.title}</div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">Progress: ${t.progress || 0}%</div>
+        </div>
+        <span class="task-priority ${pClass}">${(t.priority || 'normal').toUpperCase()}</span>
+      </div>`;
+    });
+    html += `
+    <div class="agent-detail-card">
+      <div class="agent-detail-left">
+        <div class="agent-detail-name">${a.name}</div>
+        <div class="agent-detail-role">${AGENT_ROLES[a.id] || ''}</div>
+        <div class="agent-detail-meta">
+          <div>Status: <span class="status-dot ${a.status}" style="display:inline-block;vertical-align:middle;width:6px;height:6px;"></span> <span>${a.status}</span></div>
+          <div>Model: <span style="color:var(--accent)">${AGENT_MODELS[a.id] || 'unknown'}</span></div>
+          <div>Updated: <span>${a.updated_at ? timeAgo(a.updated_at) : 'N/A'}</span></div>
+        </div>
+      </div>
+      <div class="agent-detail-right">
+        <div class="agent-task-list">${tasksHtml || '<div style="color:var(--text-tertiary);font-size:12px">No tasks</div>'}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('agents-detail').innerHTML = html;
+}
+
+function renderTrend(events) {
+  const container = document.getElementById('trend-chart');
+  const legend = document.getElementById('trend-legend');
+  if (!container) return;
+  const days = [];
+  const labels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+  const agents = Object.keys(AGENT_COLORS);
+  const maxPerDay = Math.max(1, ...days.map(day => events.filter(e => e.ts && e.ts.startsWith(day)).length));
+  let html = '';
+  days.forEach((day, di) => {
+    const dayDate = new Date(day);
+    html += '<div class="chart-day">';
+    html += '<div class="chart-bar-stack">';
+    agents.forEach(ag => {
+      const count = events.filter(e => e.ts && e.ts.startsWith(day) && e.agent_id === ag).length;
+      const h = Math.round((count / maxPerDay) * 90);
+      html += `<div class="chart-bar" style="height:${h}px;background:${AGENT_COLORS[ag]}${count ? '' : '00'}"></div>`;
+    });
+    html += '</div>';
+    html += `<div class="chart-label">${labels[dayDate.getDay()]}</div>`;
+    html += '</div>';
+  });
+  container.innerHTML = html;
+  legend.innerHTML = agents.map(a => `<div class="chart-legend-item"><div class="swatch" style="background:${AGENT_COLORS[a]}"></div>${a}</div>`).join('');
+}
+
+// Kanban
+function renderKanban() {
+  ['todo','doing','done'].forEach(status => {
+    const items = kanbanTasks.filter(t => t.status === status);
+    const container = document.getElementById('kanban-' + status);
+    document.getElementById('count-' + status).textContent = items.length;
+    container.innerHTML = items.map(t => `
+      <div class="kanban-card" draggable="true" data-id="${t.id}" ondragstart="kanbanDragStart(event)">
+        <div class="kanban-card-title">${t.title}</div>
+        <div class="kanban-card-meta">
+          <span class="kanban-card-category ${t.category}">${t.category}</span>
+          <span class="kanban-card-date">${t.created ? new Date(t.created).toLocaleDateString() : ''}</span>
+        </div>
+        ${t.assignee ? '<div class="kanban-card-assignee">→ ' + t.assignee + '</div>' : ''}
+        <div style="margin-top:6px;display:flex;gap:4px;">
+          <button onclick="deleteKanbanTask('${t.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;">Delete</button>
+        </div>
+      </div>
+    `).join('');
   });
 }
 
-
-async function logActivity(agentId, type, summary) {
-  if (!GH_TOKEN || !GH_REPO) return;
-  try {
-    // Fetch current activities
-    const res = await fetch('https://api.github.com/repos/' + GH_REPO + '/contents/data/activities.json', {
-      headers: { Authorization: 'token ' + GH_TOKEN }
-    });
-    const file = await res.json();
-    const data = JSON.parse(atob(file.content));
-    
-    // Add new event
-    const event = {
-      ts: new Date().toISOString(),
-      agent_id: agentId,
-      type: type,
-      summary: summary
-    };
-    data.events.unshift(event);
-    
-    // Keep max 100 events
-    if (data.events.length > 100) data.events = data.events.slice(0, 100);
-    data.generated_at = new Date().toISOString();
-    
-    // Push update
-    await fetch('https://api.github.com/repos/' + GH_REPO + '/contents/data/activities.json', {
-      method: 'PUT',
-      headers: { Authorization: 'token ' + GH_TOKEN, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: agentId + ': ' + type + ' - ' + summary,
-        content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
-        sha: file.sha
-      })
-    });
-  } catch (e) { console.warn('Activity log failed:', e); }
+let dragTaskId = null;
+function kanbanDragStart(e) { dragTaskId = e.target.dataset.id; e.target.classList.add('dragging'); }
+function kanbanDrop(e) {
+  e.preventDefault();
+  const col = e.target.closest('.kanban-column');
+  if (!col || !dragTaskId) return;
+  const newStatus = col.dataset.status;
+  const task = kanbanTasks.find(t => t.id === dragTaskId);
+  if (task) { task.status = newStatus; saveKanban(); renderKanban(); }
+  dragTaskId = null;
 }
+
+let addTaskStatus = 'todo';
+function openAddTask(status) { addTaskStatus = status; document.getElementById('add-task-modal').classList.add('active'); document.getElementById('new-task-title').focus(); }
+function closeAddTask() { document.getElementById('add-task-modal').classList.remove('active'); }
+function addTask() {
+  const title = document.getElementById('new-task-title').value.trim();
+  if (!title) return;
+  kanbanTasks.push({
+    id: 'kt-' + Date.now(),
+    title,
+    status: addTaskStatus,
+    category: document.getElementById('new-task-category').value,
+    assignee: document.getElementById('new-task-assignee').value,
+    created: new Date().toISOString()
+  });
+  saveKanban();
+  renderKanban();
+  closeAddTask();
+  document.getElementById('new-task-title').value = '';
+}
+function deleteKanbanTask(id) {
+  kanbanTasks = kanbanTasks.filter(t => t.id !== id);
+  saveKanban();
+  renderKanban();
+}
+function saveKanban() { localStorage.setItem('kanban_tasks', JSON.stringify(kanbanTasks)); }
 
 function manualRefresh() {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('loading');
-  refresh().finally(() => {
-    setTimeout(() => btn.classList.remove('loading'), 400);
-  });
+  refresh().finally(() => setTimeout(() => btn.classList.remove('loading'), 400));
 }
 
+// Sample data
 const sampleAgents = [
   { id: 'lisa', name: 'Lisa', status: 'online', current_task: 'QA + 進度追蹤', progress: 40, updated_at: new Date().toISOString(), task_queue: [
     { id: 'l1', title: 'QA + 進度追蹤', progress: 40, priority: 'HIGH', active: true },
@@ -946,7 +620,7 @@ const sampleAgents = [
 ];
 
 const sampleEvents = [
-  { ts: new Date(Date.now() - 60000).toISOString(), agent_id: 'jony', type: 'started', summary: 'Dashboard Phase 2 — Timeline + Stats' },
+  { ts: new Date(Date.now() - 60000).toISOString(), agent_id: 'jony', type: 'started', summary: 'Dashboard Phase 2 — Kanban + Tabs' },
   { ts: new Date(Date.now() - 120000).toISOString(), agent_id: 'jarvis', type: 'completed', summary: 'Schema + README pushed to repo' },
   { ts: new Date(Date.now() - 180000).toISOString(), agent_id: 'naomi', type: 'completed', summary: '需求規格 v1 + P1 清單' },
   { ts: new Date(Date.now() - 240000).toISOString(), agent_id: 'jony', type: 'completed', summary: 'MVP Dashboard UI — QA approved' },
@@ -954,965 +628,35 @@ const sampleEvents = [
   { ts: new Date(Date.now() - 360000).toISOString(), agent_id: 'jennie', type: 'updated', summary: 'Daily briefing 進行中' }
 ];
 
-// refresh() moved to end of page
-
-const AGENTS_LIST = ['lisa','jony','jarvis','naomi','jennie'];
-
-function openCmdBar() {
-  document.getElementById('cmd-overlay').classList.add('active');
-  const input = document.getElementById('cmd-input');
-  input.value = '';
-  input.focus();
-  renderCmdResults('');
-}
-
-function closeCmdBar() {
-  document.getElementById('cmd-overlay').classList.remove('active');
-}
-
-function renderCmdResults(query) {
-  const results = document.getElementById('cmd-results');
-  if (!query.trim()) {
-    results.innerHTML = AGENTS_LIST.map(a =>
-      '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
-      '<span class="cmd-agent">@' + a + '</span> Ready for task</div>'
-    ).join('');
-    return;
-  }
-  
-  const match = query.match(/^@(\w+)\s*(.*)/);
-  if (match) {
-    const agent = match[1].toLowerCase();
-    const task = match[2];
-    if (AGENTS_LIST.includes(agent)) {
-      results.innerHTML = '<div class="cmd-item selected" onclick="dispatchTask(\'' + agent + '\',\'' + (task||'').replace(/'/g,"\\'") + '\')">' +
-        '<span class="cmd-agent">@' + agent + '</span> ' + (task || 'Type task description...') + '</div>';
-    } else {
-      const filtered = AGENTS_LIST.filter(a => a.startsWith(agent));
-      results.innerHTML = filtered.map(a =>
-        '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
-        '<span class="cmd-agent">@' + a + '</span></div>'
-      ).join('') || '<div class="cmd-item">No matching agent</div>';
-    }
-  } else {
-    results.innerHTML = AGENTS_LIST.map(a =>
-      '<div class="cmd-item" onclick="dispatchTask(\'' + a + '\',\'' + query.replace(/'/g,"\\'") + '\')">' +
-      '<span class="cmd-agent">@' + a + '</span> ' + query + '</div>'
-    ).join('');
-  }
-}
-
-function prefillAgent(agent) {
-  const input = document.getElementById('cmd-input');
-  input.value = '@' + agent + ' ';
-  input.focus();
-  renderCmdResults(input.value);
-}
-
-async function dispatchTask(agentId, taskDesc) {
-  if (!taskDesc.trim()) return;
-  closeCmdBar();
-  
-  if (!currentTasks) return;
-  const agent = currentTasks.agents.find(a => a.id === agentId);
-  if (!agent) return;
-  
-  const newTask = {
-    id: 'task-' + Date.now(),
-    title: taskDesc.trim(),
-    progress: 0,
-    priority: 'normal',
-    active: false
-  };
-  
-  if (!agent.task_queue) agent.task_queue = [];
-  agent.task_queue.push(newTask);
-  
-  // If no active task, activate this one
-  if (!agent.task_queue.some(t => t.active)) {
-    newTask.active = true;
-    agent.current_task = newTask.title;
-    agent.progress = 0;
-    if (agent.status === 'idle') agent.status = 'online';
-  }
-  
-  renderAgents(currentTasks.agents);
-  showToast('Dispatched to ' + agent.name);
-  
-  try {
-    await commitTasks('Quick assign: ' + taskDesc + ' to ' + agent.name);
-    await logActivity(agentId, 'task_added', taskDesc);
-  } catch(e) { showToast('Save failed', 5000); }
-}
-
-document.getElementById('cmd-input').addEventListener('input', function() {
-  renderCmdResults(this.value);
-});
-
-document.getElementById('cmd-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeCmdBar();
-  if (e.key === 'Enter') {
-    const match = this.value.match(/^@(\w+)\s+(.+)/);
-    if (match && AGENTS_LIST.includes(match[1].toLowerCase())) {
-      dispatchTask(match[1].toLowerCase(), match[2]);
-    }
-  }
-});
-
-document.addEventListener('keydown', function(e) {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-    e.preventDefault();
-    const overlay = document.getElementById('cmd-overlay');
-    if (overlay.classList.contains('active')) closeCmdBar();
-    else openCmdBar();
-  }
-});
-
-
-let batchSelected = new Set();
-function toggleBatchSelect(agentId, taskId, cb) {
-  const key = agentId + '::' + taskId;
-  if (cb.checked) batchSelected.add(key); else batchSelected.delete(key);
-  const bar = document.getElementById('batch-bar');
-  document.getElementById('batch-count').textContent = batchSelected.size;
-  bar.classList.toggle('active', batchSelected.size > 0);
-}
-function clearBatchSelection() {
-  batchSelected.clear();
-  document.querySelectorAll('.task-check').forEach(c => c.checked = false);
-  document.getElementById('batch-bar').classList.remove('active');
-}
-async function batchComplete() {
-  if (!currentTasks) return;
-  for (const key of batchSelected) {
-    const [aid, tid] = key.split('::');
-    const a = currentTasks.agents.find(x => x.id === aid);
-    if (!a || !a.task_queue) continue;
-    const i = a.task_queue.findIndex(t => t.id === tid);
-    if (i >= 0) { a.task_queue.splice(i, 1); logActivity(aid, 'completed', 'Batch complete'); }
-  }
-  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch completed');
-  await commitTasks('Batch complete').catch(() => showToast('Save failed', 5000));
-}
-async function batchDelete() {
-  if (!currentTasks) return;
-  for (const key of batchSelected) {
-    const [aid, tid] = key.split('::');
-    const a = currentTasks.agents.find(x => x.id === aid);
-    if (!a || !a.task_queue) continue;
-    const i = a.task_queue.findIndex(t => t.id === tid);
-    if (i >= 0) a.task_queue.splice(i, 1);
-  }
-  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch deleted');
-  await commitTasks('Batch delete').catch(() => showToast('Save failed', 5000));
-}
-function batchReassign() {
-  if (!currentTasks) return;
-  const names = currentTasks.agents.map(a => a.id).join(', ');
-  const target = prompt('Reassign to: ' + names);
-  if (!target) return;
-  const ta = currentTasks.agents.find(a => a.id === target.toLowerCase());
-  if (!ta) { showToast('Unknown agent'); return; }
-  if (!ta.task_queue) ta.task_queue = [];
-  for (const key of batchSelected) {
-    const [aid, tid] = key.split('::');
-    if (aid === ta.id) continue;
-    const a = currentTasks.agents.find(x => x.id === aid);
-    if (!a || !a.task_queue) continue;
-    const i = a.task_queue.findIndex(t => t.id === tid);
-    if (i >= 0) { const [t] = a.task_queue.splice(i, 1); t.active = false; ta.task_queue.push(t); }
-  }
-  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Reassigned to ' + ta.name);
-  commitTasks('Batch reassign to ' + ta.name).catch(() => showToast('Save failed', 5000));
-}
-
-
-function renderDependencyGraph(agents) {
-  const svg = document.getElementById('dep-svg');
-  if (!svg) return;
-  
-  // Build dependency map from task data
-  const deps = [];
-  const agentMap = {};
-  const positions = {};
-  const agentIds = agents.map(a => a.id);
-  
-  // Position agents in a circle
-  const cx = 300, cy = 100, rx = 220, ry = 70;
-  agentIds.forEach((id, i) => {
-    const angle = (i / agentIds.length) * Math.PI * 2 - Math.PI / 2;
-    positions[id] = { x: cx + rx * Math.cos(angle), y: cy + ry * Math.sin(angle) };
-    agentMap[id] = agents[i];
-  });
-  
-  // Infer dependencies from task descriptions (mentions of other agents)
-  agents.forEach(a => {
-    const queue = a.task_queue || [];
-    queue.forEach(t => {
-      const title = (t.title || '').toLowerCase();
-      agentIds.forEach(otherId => {
-        if (otherId !== a.id && title.includes(otherId)) {
-          deps.push({ from: a.id, to: otherId, task: t.title, blocked: t.priority === 'high' });
-        }
-      });
-    });
-    // Also check current_task
-    const ct = (a.current_task || '').toLowerCase();
-    agentIds.forEach(otherId => {
-      if (otherId !== a.id && ct.includes(otherId)) {
-        if (!deps.find(d => d.from === a.id && d.to === otherId))
-          deps.push({ from: a.id, to: otherId, task: a.current_task, blocked: false });
-      }
-    });
-  });
-  
-  let html = svg.innerHTML.split('</defs>')[0] + '</defs>';
-  
-  // Draw edges
-  deps.forEach(d => {
-    const from = positions[d.from];
-    const to = positions[d.to];
-    if (!from || !to) return;
-    const mx = (from.x + to.x) / 2;
-    const my = (from.y + to.y) / 2 - 20;
-    html += '<path class="dep-edge' + (d.blocked ? ' blocked' : '') + '" d="M' + from.x + ',' + from.y + ' Q' + mx + ',' + my + ' ' + to.x + ',' + to.y + '"/>';
-  });
-  
-  // Draw nodes
-  agentIds.forEach(id => {
-    const p = positions[id];
-    const a = agentMap[id];
-    const color = AGENT_COLORS[id] || '#666';
-    const statusColor = a.status === 'busy' ? '#fbbf24' : a.status === 'online' ? '#34d399' : a.status === 'offline' ? '#6b7280' : '#9ca3af';
-    html += '<g class="dep-node" onclick="openModal(\'' + id + '\')">';
-    html += '<circle cx="' + p.x + '" cy="' + p.y + '" r="18" fill="' + color + '" opacity="0.2" stroke="' + color + '" stroke-width="2"/>';
-    html += '<circle cx="' + (p.x + 14) + '" cy="' + (p.y - 14) + '" r="4" fill="' + statusColor + '"/>';
-    html += '<text class="dep-label" x="' + p.x + '" y="' + (p.y + 4) + '">' + (a.name || id) + '</text>';
-    html += '</g>';
-  });
-  
-  // Show message if no deps
-  if (deps.length === 0) {
-    html += '<text class="dep-label" x="300" y="190" style="fill:var(--text-tertiary);font-size:10px">No cross-agent dependencies detected in current tasks</text>';
-  }
-  
-  svg.innerHTML = html;
-}
-
-</script>
-
-<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-      <h3 id="modal-title" style="margin:0">Edit Agent</h3>
-      <div style="display:flex;gap:4px">
-        <button class="btn btn-secondary tab-btn active" onclick="switchTab('edit')" id="tab-edit" style="font-size:11px;padding:4px 10px">Edit</button>
-        <button class="btn btn-secondary tab-btn" onclick="switchTab('reassign')" id="tab-reassign" style="font-size:11px;padding:4px 10px">Reassign</button>
-        <button class="btn btn-secondary tab-btn" onclick="switchTab('new')" id="tab-new" style="font-size:11px;padding:4px 10px">+ New</button>
-      </div>
-    </div>
-
-    <!-- Edit Tab -->
-    <div id="panel-edit">
-      <div class="field">
-        <label>Status</label>
-        <select id="edit-status">
-          <option value="online">Online</option>
-          <option value="busy">Busy</option>
-          <option value="idle">Idle</option>
-          <option value="offline">Offline</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Current Task</label>
-        <input type="text" id="edit-task" placeholder="What are they working on?">
-      </div>
-      <div class="field">
-        <label>Progress</label>
-        <div style="display:flex;align-items:center;gap:8px">
-          <input type="range" id="edit-progress" min="0" max="100" step="5" style="flex:1" oninput="document.getElementById('progress-val').textContent=this.value+'%'">
-          <span id="progress-val" style="font-size:11px;color:var(--text-tertiary);min-width:32px">0%</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Reassign Tab -->
-    <div id="panel-reassign" style="display:none">
-      <div class="field">
-        <label>Reassign Task To</label>
-        <select id="reassign-target"></select>
-      </div>
-      <div class="field">
-        <label>Task to Transfer</label>
-        <input type="text" id="reassign-task" readonly style="opacity:0.7">
-      </div>
-      <p style="font-size:11px;color:var(--text-tertiary);margin-top:8px">Current agent will be set to idle. Target agent will receive this task.</p>
-    </div>
-
-    <!-- New Task Tab -->
-    <div id="panel-new" style="display:none">
-      <div class="field">
-        <label>Assign To</label>
-        <select id="new-agent"></select>
-      </div>
-      <div class="field">
-        <label>Task Description</label>
-        <input type="text" id="new-task" placeholder="Describe the task...">
-      </div>
-      <div class="field">
-        <label>Priority</label>
-        <select id="new-priority">
-          <option value="normal">Normal</option>
-          <option value="high">High</option>
-          <option value="low">Low</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" id="save-btn" onclick="saveAction()">Save</button>
-    </div>
-  </div>
-</div>
-<div class="toast" id="toast"></div>
-
-<script>
-
-
-function renderTaskQueue(agent) {
-  const queue = agent.task_queue || [];
-  if (queue.length <= 1) return '';
-  return '<div class="task-queue" data-agent="' + agent.id + '">' +
-    queue.map((t, i) => {
-      const isActive = t.active;
-      const priorityTag = t.priority && t.priority !== 'normal'
-        ? '<span class="task-priority ' + t.priority + '">' + t.priority + '</span>'
-        : '';
-      const switchBtn = !isActive
-        ? '<button class="task-switch-btn" onclick="event.stopPropagation();switchTask(\'' + agent.id + '\',' + i + ')">Activate</button>'
-        : '';
-      return '<div class="task-item' + (isActive ? ' active' : '') + '" draggable="true" data-idx="' + i + '"><span class="drag-handle" title="Drag to reorder">⠿</span>' +
-        '<input type="checkbox" class="task-check" onclick="event.stopPropagation();toggleBatchSelect(\'' + agent.id + '\',\'' + t.id + '\',this)">' + '<span class="task-dot ' + (isActive ? 'active' : 'queued') + '"></span>' +
-        '<span class="task-title">' + t.title + '</span>' +
-        priorityTag + switchBtn + '</div>';
-    }).join('') + '</div>';
-}
-
-function switchTask(agentId, idx) {
-  if (!currentTasks) return;
-  const agent = currentTasks.agents.find(a => a.id === agentId);
-  if (!agent || !agent.task_queue) return;
-  agent.task_queue.forEach((t, i) => { t.active = (i === idx); });
-  const active = agent.task_queue[idx];
-  agent.current_task = active.title;
-  agent.progress = active.progress;
-  agent.updated_at = new Date().toISOString();
-  renderAgents(currentTasks.agents);
-  // Auto-save
-  commitTasks('Switch ' + agent.name + ' to: ' + active.title).then(() => {
-    showToast('Switched to: ' + active.title);
-  }).catch(e => showToast('Save failed: ' + e.message, 5000));
-}
-
-// Drag to reorder
-document.addEventListener('dragstart', e => {
-  if (!e.target.classList.contains('task-item')) return;
-  e.target.classList.add('dragging');
-  e.dataTransfer.setData('text/plain', e.target.dataset.idx);
-});
-
-document.addEventListener('dragend', e => {
-  if (e.target.classList.contains('task-item')) e.target.classList.remove('dragging');
-  document.querySelectorAll('.task-item.drag-over').forEach(el => el.classList.remove('drag-over'));
-});
-
-document.addEventListener('dragover', e => {
-  const item = e.target.closest('.task-item');
-  if (!item) return;
-  e.preventDefault();
-  item.classList.add('drag-over');
-});
-
-document.addEventListener('dragleave', e => {
-  const item = e.target.closest('.task-item');
-  if (item) item.classList.remove('drag-over');
-});
-
-document.addEventListener('drop', e => {
-  const target = e.target.closest('.task-item');
-  if (!target) return;
-  e.preventDefault();
-  target.classList.remove('drag-over');
-  const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
-  const toIdx = parseInt(target.dataset.idx);
-  const queue = target.closest('.task-queue');
-  if (!queue || fromIdx === toIdx) return;
-  const agentId = queue.dataset.agent;
-  const agent = currentTasks.agents.find(a => a.id === agentId);
-  if (!agent || !agent.task_queue) return;
-  const [moved] = agent.task_queue.splice(fromIdx, 1);
-  agent.task_queue.splice(toIdx, 0, moved);
-  renderAgents(currentTasks.agents);
-  commitTasks('Reorder ' + agent.name + ' tasks').then(() => logActivity(agent.id, 'task_reordered', 'Queue reordered')).catch(e => showToast('Save failed', 5000));
-});
-
-const AGENT_COLORS = {
-  lisa: '#a78bfa',
-  jony: '#60a5fa',
-  jarvis: '#34d399',
-  naomi: '#fbbf24',
-  jennie: '#f472b6'
-};
-
-function renderTrend(events) {
-  const chart = document.getElementById('trend-chart');
-  const legend = document.getElementById('trend-legend');
-  const days = [];
-  const today = new Date();
-
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
-  }
-
-  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const agentIds = [...new Set(events.map(e => e.agent_id))];
-  if (!agentIds.length) agentIds.push('lisa','jony','jarvis','naomi','jennie');
-
-  // Count completed per agent per day
-  const counts = {};
-  days.forEach(d => {
-    counts[d] = {};
-    agentIds.forEach(a => counts[d][a] = 0);
-  });
-
-  events.forEach(e => {
-    const day = e.ts.slice(0, 10);
-    if (counts[day] && counts[day][e.agent_id] !== undefined) {
-      counts[day][e.agent_id]++;
-    }
-  });
-
-  const maxTotal = Math.max(1, ...days.map(d =>
-    agentIds.reduce((s, a) => s + counts[d][a], 0)
-  ));
-
-  chart.innerHTML = days.map(d => {
-    const date = new Date(d + 'T00:00:00');
-    const label = dayNames[date.getDay()];
-    const total = agentIds.reduce((s, a) => s + counts[d][a], 0);
-    const bars = agentIds.map(a => {
-      const h = counts[d][a] > 0 ? Math.max(4, (counts[d][a] / maxTotal) * 80) : 0;
-      return h > 0 ? '<div class="chart-bar" style="height:' + h + 'px;background:' + (AGENT_COLORS[a] || '#666') + '"></div>' : '';
-    }).join('');
-    return '<div class="chart-day">' +
-      (total > 0 ? '<span class="chart-count">' + total + '</span>' : '') +
-      '<div class="chart-bars">' + (bars || '<div class="chart-bar" style="height:2px;background:var(--border)"></div>') + '</div>' +
-      '<span class="chart-label">' + label + '</span></div>';
-  }).join('');
-
-  legend.innerHTML = agentIds.map(a =>
-    '<div class="legend-item"><div class="legend-dot" style="background:' +
-    (AGENT_COLORS[a] || '#666') + '"></div>' + a + '</div>'
-  ).join('');
-}
-
-const REPO = 'codenameagentd-cloud/mission-control-dashboard';
-const BRANCH = 'main';
-let editingAgent = null;
-let currentTasks = null;
-
-let currentTab = 'edit';
-
-function switchTab(tab) {
-  currentTab = tab;
-  ['edit','reassign','new'].forEach(t => {
-    document.getElementById('panel-' + t).style.display = t === tab ? '' : 'none';
-    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
-  });
-  const btn = document.getElementById('save-btn');
-  btn.textContent = tab === 'reassign' ? 'Reassign' : tab === 'new' ? 'Create' : 'Save';
-}
-
-function openModal(agentId) {
-  const agent = (currentTasks || {agents:[]}).agents.find(a => a.id === agentId);
-  if (!agent) return;
-  editingAgent = agentId;
-  currentTab = 'edit';
-  switchTab('edit');
-  document.getElementById('modal-title').textContent = agent.name;
-  document.getElementById('edit-status').value = agent.status;
-  document.getElementById('edit-task').value = agent.current_task || '';
-  document.getElementById('edit-progress').value = agent.progress;
-  document.getElementById('progress-val').textContent = agent.progress + '%';
-
-  // Populate reassign dropdown (all agents except current)
-  const others = (currentTasks.agents || []).filter(a => a.id !== agentId);
-  document.getElementById('reassign-target').innerHTML = others.map(a =>
-    '<option value="' + a.id + '">' + a.name + '</option>'
-  ).join('');
-  document.getElementById('reassign-task').value = agent.current_task || '';
-
-  // Populate new task agent dropdown
-  document.getElementById('new-agent').innerHTML = (currentTasks.agents || []).map(a =>
-    '<option value="' + a.id + '"' + (a.id === agentId ? ' selected' : '') + '>' + a.name + '</option>'
-  ).join('');
-  document.getElementById('new-task').value = '';
-
-  document.getElementById('modal-overlay').classList.add('active');
-}
-
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('active');
-  editingAgent = null;
-}
-
-function showToast(msg, duration) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration || 3000);
-}
-
-async function saveAction() {
-  if (currentTab === 'edit') return saveEdit();
-  if (currentTab === 'reassign') return saveReassign();
-  if (currentTab === 'new') return saveNewTask();
-}
-
-async function saveReassign() {
-  if (!editingAgent || !currentTasks) return;
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true; btn.textContent = 'Reassigning…';
-  try {
-    const source = currentTasks.agents.find(a => a.id === editingAgent);
-    const targetId = document.getElementById('reassign-target').value;
-    const target = currentTasks.agents.find(a => a.id === targetId);
-    if (!source || !target) throw new Error('Agent not found');
-
-    const task = source.current_task;
-    const progress = source.progress;
-    target.current_task = task;
-    target.progress = progress;
-    target.status = 'busy';
-    target.updated_at = new Date().toISOString();
-    source.current_task = '';
-    source.progress = 0;
-    source.status = 'idle';
-    source.updated_at = new Date().toISOString();
-    currentTasks.generated_at = new Date().toISOString();
-
-    await commitTasks('Reassign: ' + task + ' from ' + source.name + ' to ' + target.name);
-    showToast('Reassigned to ' + target.name);
-    closeModal();
-    setTimeout(refresh, 2000);
-  } catch(e) { showToast('Error: ' + e.message, 5000); }
-  finally { btn.disabled = false; btn.textContent = 'Reassign'; }
-}
-
-async function saveNewTask() {
-  if (!currentTasks) return;
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true; btn.textContent = 'Creating…';
-  try {
-    const agentId = document.getElementById('new-agent').value;
-    const agent = currentTasks.agents.find(a => a.id === agentId);
-    const task = document.getElementById('new-task').value.trim();
-    if (!agent || !task) throw new Error('Missing agent or task');
-
-    agent.current_task = task;
-    agent.progress = 0;
-    agent.status = 'busy';
-    agent.updated_at = new Date().toISOString();
-    currentTasks.generated_at = new Date().toISOString();
-
-    await commitTasks('New task for ' + agent.name + ': ' + task);
-    showToast('Task assigned to ' + agent.name);
-    closeModal();
-    setTimeout(refresh, 2000);
-  } catch(e) { showToast('Error: ' + e.message, 5000); }
-  finally { btn.disabled = false; btn.textContent = 'Create'; }
-}
-
-async function commitTasks(message) {
-  const metaRes = await fetch('https://api.github.com/repos/' + REPO + '/contents/data/tasks.json?ref=' + BRANCH, { headers: ghHeaders() });
-  if (!metaRes.ok) throw new Error('Failed to read');
-  const meta = await metaRes.json();
-  const updateRes = await fetch('https://api.github.com/repos/' + REPO + '/contents/data/tasks.json', {
-    method: 'PUT',
-    headers: ghHeaders(),
-    body: JSON.stringify({
-      message: message,
-      content: btoa(unescape(encodeURIComponent(JSON.stringify(currentTasks, null, 2)))),
-      sha: meta.sha,
-      branch: BRANCH
-    })
-  });
-  if (!updateRes.ok) throw new Error('Failed to save');
-}
-
-async function saveEdit() {
-  if (!editingAgent || !currentTasks) return;
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
-
-  try {
-    const agent = currentTasks.agents.find(a => a.id === editingAgent);
-    agent.status = document.getElementById('edit-status').value;
-    agent.current_task = document.getElementById('edit-task').value;
-    agent.progress = parseInt(document.getElementById('edit-progress').value);
-    agent.updated_at = new Date().toISOString();
-    currentTasks.generated_at = new Date().toISOString();
-
-    await commitTasks('Update ' + agent.name + ': ' + agent.status + ' — ' + (agent.current_task || 'idle'));
-    showToast('Saved — refreshing…');
-    closeModal();
-    setTimeout(refresh, 2000);
-  } catch (e) {
-    showToast('Error: ' + e.message, 5000);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Save';
-  }
-}
-
-function ghHeaders() {
-  const token = localStorage.getItem('gh_token');
-  const h = { 'Accept': 'application/vnd.github.v3+json' };
-  if (token) h['Authorization'] = 'token ' + token;
-  return h;
-}
-
-// Token setup UI - enhanced onboarding
+// Onboarding
 if (!localStorage.getItem('gh_token')) {
-  const banner = document.createElement('div');
-  banner.id = 'onboarding-banner';
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:10px 16px;background:#b45309;color:#fff;text-align:center;z-index:100;font-size:13px;display:flex;align-items:center;justify-content:center;gap:12px;';
-  banner.innerHTML = '⚠️ Viewing sample data — <button onclick="promptToken()" style="background:#fff;color:#b45309;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;font-weight:600;font-size:12px">Connect GitHub</button> to see live agent data';
-  document.body.appendChild(banner);
+  document.getElementById('onboarding').innerHTML = '<div class="onboarding-banner">⚠️ Viewing sample data — <button onclick="promptToken()">Connect GitHub</button> to see live agent data</div>';
   document.body.style.paddingTop = '40px';
 }
-
 function promptToken() {
   const t = prompt('GitHub Personal Access Token (repo scope):');
   if (t) { localStorage.setItem('gh_token', t.trim()); location.reload(); }
 }
 
-const AGENTS_LIST = ['lisa','jony','jarvis','naomi','jennie'];
-
-function openCmdBar() {
-  document.getElementById('cmd-overlay').classList.add('active');
-  const input = document.getElementById('cmd-input');
-  input.value = '';
-  input.focus();
-  renderCmdResults('');
-}
-
-function closeCmdBar() {
-  document.getElementById('cmd-overlay').classList.remove('active');
-}
-
-function renderCmdResults(query) {
-  const results = document.getElementById('cmd-results');
-  if (!query.trim()) {
-    results.innerHTML = AGENTS_LIST.map(a =>
-      '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
-      '<span class="cmd-agent">@' + a + '</span> Ready for task</div>'
-    ).join('');
-    return;
+// Touch drag for kanban
+document.addEventListener('touchstart', function(e) {
+  const card = e.target.closest('.kanban-card');
+  if (card) { dragTaskId = card.dataset.id; card.classList.add('dragging'); }
+}, { passive: true });
+document.addEventListener('touchend', function(e) {
+  if (!dragTaskId) return;
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const col = el && el.closest('.kanban-column');
+  if (col) {
+    const task = kanbanTasks.find(t => t.id === dragTaskId);
+    if (task) { task.status = col.dataset.status; saveKanban(); renderKanban(); }
   }
-  
-  const match = query.match(/^@(\w+)\s*(.*)/);
-  if (match) {
-    const agent = match[1].toLowerCase();
-    const task = match[2];
-    if (AGENTS_LIST.includes(agent)) {
-      results.innerHTML = '<div class="cmd-item selected" onclick="dispatchTask(\'' + agent + '\',\'' + (task||'').replace(/'/g,"\\'") + '\')">' +
-        '<span class="cmd-agent">@' + agent + '</span> ' + (task || 'Type task description...') + '</div>';
-    } else {
-      const filtered = AGENTS_LIST.filter(a => a.startsWith(agent));
-      results.innerHTML = filtered.map(a =>
-        '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
-        '<span class="cmd-agent">@' + a + '</span></div>'
-      ).join('') || '<div class="cmd-item">No matching agent</div>';
-    }
-  } else {
-    results.innerHTML = AGENTS_LIST.map(a =>
-      '<div class="cmd-item" onclick="dispatchTask(\'' + a + '\',\'' + query.replace(/'/g,"\\'") + '\')">' +
-      '<span class="cmd-agent">@' + a + '</span> ' + query + '</div>'
-    ).join('');
-  }
-}
-
-function prefillAgent(agent) {
-  const input = document.getElementById('cmd-input');
-  input.value = '@' + agent + ' ';
-  input.focus();
-  renderCmdResults(input.value);
-}
-
-async function dispatchTask(agentId, taskDesc) {
-  if (!taskDesc.trim()) return;
-  closeCmdBar();
-  
-  if (!currentTasks) return;
-  const agent = currentTasks.agents.find(a => a.id === agentId);
-  if (!agent) return;
-  
-  const newTask = {
-    id: 'task-' + Date.now(),
-    title: taskDesc.trim(),
-    progress: 0,
-    priority: 'normal',
-    active: false
-  };
-  
-  if (!agent.task_queue) agent.task_queue = [];
-  agent.task_queue.push(newTask);
-  
-  // If no active task, activate this one
-  if (!agent.task_queue.some(t => t.active)) {
-    newTask.active = true;
-    agent.current_task = newTask.title;
-    agent.progress = 0;
-    if (agent.status === 'idle') agent.status = 'online';
-  }
-  
-  renderAgents(currentTasks.agents);
-  showToast('Dispatched to ' + agent.name);
-  
-  try {
-    await commitTasks('Quick assign: ' + taskDesc + ' to ' + agent.name);
-    await logActivity(agentId, 'task_added', taskDesc);
-  } catch(e) { showToast('Save failed', 5000); }
-}
-
-document.getElementById('cmd-input').addEventListener('input', function() {
-  renderCmdResults(this.value);
+  document.querySelectorAll('.dragging').forEach(d => d.classList.remove('dragging'));
+  dragTaskId = null;
 });
 
-document.getElementById('cmd-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeCmdBar();
-  if (e.key === 'Enter') {
-    const match = this.value.match(/^@(\w+)\s+(.+)/);
-    if (match && AGENTS_LIST.includes(match[1].toLowerCase())) {
-      dispatchTask(match[1].toLowerCase(), match[2]);
-    }
-  }
-});
-
-document.addEventListener('keydown', function(e) {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-    e.preventDefault();
-    const overlay = document.getElementById('cmd-overlay');
-    if (overlay.classList.contains('active')) closeCmdBar();
-    else openCmdBar();
-  }
-});
-
-
-let batchSelected = new Set();
-function toggleBatchSelect(agentId, taskId, cb) {
-  const key = agentId + '::' + taskId;
-  if (cb.checked) batchSelected.add(key); else batchSelected.delete(key);
-  const bar = document.getElementById('batch-bar');
-  document.getElementById('batch-count').textContent = batchSelected.size;
-  bar.classList.toggle('active', batchSelected.size > 0);
-}
-function clearBatchSelection() {
-  batchSelected.clear();
-  document.querySelectorAll('.task-check').forEach(c => c.checked = false);
-  document.getElementById('batch-bar').classList.remove('active');
-}
-async function batchComplete() {
-  if (!currentTasks) return;
-  for (const key of batchSelected) {
-    const [aid, tid] = key.split('::');
-    const a = currentTasks.agents.find(x => x.id === aid);
-    if (!a || !a.task_queue) continue;
-    const i = a.task_queue.findIndex(t => t.id === tid);
-    if (i >= 0) { a.task_queue.splice(i, 1); logActivity(aid, 'completed', 'Batch complete'); }
-  }
-  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch completed');
-  await commitTasks('Batch complete').catch(() => showToast('Save failed', 5000));
-}
-async function batchDelete() {
-  if (!currentTasks) return;
-  for (const key of batchSelected) {
-    const [aid, tid] = key.split('::');
-    const a = currentTasks.agents.find(x => x.id === aid);
-    if (!a || !a.task_queue) continue;
-    const i = a.task_queue.findIndex(t => t.id === tid);
-    if (i >= 0) a.task_queue.splice(i, 1);
-  }
-  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch deleted');
-  await commitTasks('Batch delete').catch(() => showToast('Save failed', 5000));
-}
-function batchReassign() {
-  if (!currentTasks) return;
-  const names = currentTasks.agents.map(a => a.id).join(', ');
-  const target = prompt('Reassign to: ' + names);
-  if (!target) return;
-  const ta = currentTasks.agents.find(a => a.id === target.toLowerCase());
-  if (!ta) { showToast('Unknown agent'); return; }
-  if (!ta.task_queue) ta.task_queue = [];
-  for (const key of batchSelected) {
-    const [aid, tid] = key.split('::');
-    if (aid === ta.id) continue;
-    const a = currentTasks.agents.find(x => x.id === aid);
-    if (!a || !a.task_queue) continue;
-    const i = a.task_queue.findIndex(t => t.id === tid);
-    if (i >= 0) { const [t] = a.task_queue.splice(i, 1); t.active = false; ta.task_queue.push(t); }
-  }
-  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Reassigned to ' + ta.name);
-  commitTasks('Batch reassign to ' + ta.name).catch(() => showToast('Save failed', 5000));
-}
-
-
-function renderDependencyGraph(agents) {
-  const svg = document.getElementById('dep-svg');
-  if (!svg) return;
-  
-  // Build dependency map from task data
-  const deps = [];
-  const agentMap = {};
-  const positions = {};
-  const agentIds = agents.map(a => a.id);
-  
-  // Position agents in a circle
-  const cx = 300, cy = 100, rx = 220, ry = 70;
-  agentIds.forEach((id, i) => {
-    const angle = (i / agentIds.length) * Math.PI * 2 - Math.PI / 2;
-    positions[id] = { x: cx + rx * Math.cos(angle), y: cy + ry * Math.sin(angle) };
-    agentMap[id] = agents[i];
-  });
-  
-  // Infer dependencies from task descriptions (mentions of other agents)
-  agents.forEach(a => {
-    const queue = a.task_queue || [];
-    queue.forEach(t => {
-      const title = (t.title || '').toLowerCase();
-      agentIds.forEach(otherId => {
-        if (otherId !== a.id && title.includes(otherId)) {
-          deps.push({ from: a.id, to: otherId, task: t.title, blocked: t.priority === 'high' });
-        }
-      });
-    });
-    // Also check current_task
-    const ct = (a.current_task || '').toLowerCase();
-    agentIds.forEach(otherId => {
-      if (otherId !== a.id && ct.includes(otherId)) {
-        if (!deps.find(d => d.from === a.id && d.to === otherId))
-          deps.push({ from: a.id, to: otherId, task: a.current_task, blocked: false });
-      }
-    });
-  });
-  
-  let html = svg.innerHTML.split('</defs>')[0] + '</defs>';
-  
-  // Draw edges
-  deps.forEach(d => {
-    const from = positions[d.from];
-    const to = positions[d.to];
-    if (!from || !to) return;
-    const mx = (from.x + to.x) / 2;
-    const my = (from.y + to.y) / 2 - 20;
-    html += '<path class="dep-edge' + (d.blocked ? ' blocked' : '') + '" d="M' + from.x + ',' + from.y + ' Q' + mx + ',' + my + ' ' + to.x + ',' + to.y + '"/>';
-  });
-  
-  // Draw nodes
-  agentIds.forEach(id => {
-    const p = positions[id];
-    const a = agentMap[id];
-    const color = AGENT_COLORS[id] || '#666';
-    const statusColor = a.status === 'busy' ? '#fbbf24' : a.status === 'online' ? '#34d399' : a.status === 'offline' ? '#6b7280' : '#9ca3af';
-    html += '<g class="dep-node" onclick="openModal(\'' + id + '\')">';
-    html += '<circle cx="' + p.x + '" cy="' + p.y + '" r="18" fill="' + color + '" opacity="0.2" stroke="' + color + '" stroke-width="2"/>';
-    html += '<circle cx="' + (p.x + 14) + '" cy="' + (p.y - 14) + '" r="4" fill="' + statusColor + '"/>';
-    html += '<text class="dep-label" x="' + p.x + '" y="' + (p.y + 4) + '">' + (a.name || id) + '</text>';
-    html += '</g>';
-  });
-  
-  // Show message if no deps
-  if (deps.length === 0) {
-    html += '<text class="dep-label" x="300" y="190" style="fill:var(--text-tertiary);font-size:10px">No cross-agent dependencies detected in current tasks</text>';
-  }
-  
-  svg.innerHTML = html;
-}
-
-</script>
-
-
-<div class="cmd-overlay" id="cmd-overlay" onclick="if(event.target===this)closeCmdBar()">
-  <div class="cmd-box">
-    <input class="cmd-input" id="cmd-input" placeholder="Type @agent task description... (⌘K)" autocomplete="off">
-    <div class="cmd-results" id="cmd-results"></div>
-    <div class="cmd-hint">⌘K to open · Esc to close · Enter to dispatch · @agent to filter</div>
-  </div>
-</div>
-
-
-<div class="batch-bar" id="batch-bar">
-  <span class="batch-count" id="batch-count">0</span> selected
-  <button onclick="batchReassign()">Reassign</button>
-  <button onclick="batchComplete()">Complete</button>
-  <button class="danger" onclick="batchDelete()">Delete</button>
-  <button onclick="clearBatchSelection()">Cancel</button>
-</div>
-
-<script>
-(function() {
-  let dragItem = null, dragIdx = -1, placeholder = null;
-
-  document.addEventListener('touchstart', function(e) {
-    const item = e.target.closest('.task-item');
-    if (!item) return;
-    dragItem = item;
-    dragIdx = parseInt(item.dataset.idx);
-    item.classList.add('dragging');
-    item.style.opacity = '0.5';
-  }, { passive: true });
-
-  document.addEventListener('touchmove', function(e) {
-    if (!dragItem) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    const target = el ? el.closest('.task-item') : null;
-    document.querySelectorAll('.task-item.drag-over').forEach(i => i.classList.remove('drag-over'));
-    if (target && target !== dragItem) target.classList.add('drag-over');
-  }, { passive: false });
-
-  document.addEventListener('touchend', function(e) {
-    if (!dragItem) return;
-    dragItem.classList.remove('dragging');
-    dragItem.style.opacity = '';
-    const overItem = document.querySelector('.task-item.drag-over');
-    document.querySelectorAll('.task-item.drag-over').forEach(i => i.classList.remove('drag-over'));
-    if (overItem) {
-      const toIdx = parseInt(overItem.dataset.idx);
-      const queue = overItem.closest('.task-queue');
-      if (queue && dragIdx !== toIdx) {
-        const agentId = queue.dataset.agent;
-        const agent = currentTasks.agents.find(a => a.id === agentId);
-        if (agent && agent.task_queue) {
-          const [moved] = agent.task_queue.splice(dragIdx, 1);
-          agent.task_queue.splice(toIdx, 0, moved);
-          renderAgents(currentTasks.agents);
-          commitTasks('Reorder ' + agent.name + ' tasks').then(() => logActivity(agent.id, 'task_reordered', 'Queue reordered')).catch(e => showToast('Save failed', 5000));
-        }
-      }
-    }
-    dragItem = null;
-    dragIdx = -1;
-  }, { passive: true });
-})();
-
-// Start after all functions defined
+// Start
 refresh();
 setInterval(refresh, REFRESH_INTERVAL);
 </script>
