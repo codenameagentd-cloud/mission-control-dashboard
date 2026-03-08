@@ -316,10 +316,6 @@
   }
 
   .chart-container {
-    min-height: 120px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px;
     display: flex;
     align-items: flex-end;
     gap: 6px;
@@ -723,7 +719,7 @@
     <div class="section-header">
       <h2>7-Day Activity</h2>
     </div>
-    <div class="chart-container" id="trend-chart"><span style="color:var(--text-tertiary);font-size:12px">Loading chart...</span></div>
+    <div class="chart-container" id="trend-chart"></div>
     <div class="trend-legend" id="trend-legend"></div>
   </div>
 
@@ -837,7 +833,7 @@ async function refresh() {
       const match = onclick.match(/openModal\('(\w+)'\)/);
       if (!match) return;
       const agent = (currentTasks || {agents:[]}).agents.find(a => a.id === match[1]);
-      if (agent && agent.task_queue && agent.task_queue.length > 1) {
+      if (agent && agent.task_queue && agent.task_queue.length > 0) {
         card.insertAdjacentHTML('beforeend', renderTaskQueue(agent));
       }
     });
