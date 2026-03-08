@@ -316,6 +316,10 @@
   }
 
   .chart-container {
+    min-height: 120px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
     display: flex;
     align-items: flex-end;
     gap: 6px;
@@ -719,7 +723,7 @@
     <div class="section-header">
       <h2>7-Day Activity</h2>
     </div>
-    <div class="chart-container" id="trend-chart"></div>
+    <div class="chart-container" id="trend-chart"><span style="color:var(--text-tertiary);font-size:12px">Loading chart...</span></div>
     <div class="trend-legend" id="trend-legend"></div>
   </div>
 
