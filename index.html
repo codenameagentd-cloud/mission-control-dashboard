@@ -646,9 +646,9 @@ function renderAgents(agents) {
       <div class="task-label">${a.current_task || 'No active task'}</div>
       <div class="progress-row">
         <div class="progress-bar">
-          <div class="progress-fill" style="width: ${a.progress}%"></div>
+          <div class="progress-fill" style="width: ${a.progress}% complete"></div>
         </div>
-        <span class="progress-pct">${a.progress}%</span>
+        <span class="progress-pct">${a.progress}% complete</span>
       </div>
       <div class="card-footer">
         <span>${relativeTime(a.updated_at)}</span>
