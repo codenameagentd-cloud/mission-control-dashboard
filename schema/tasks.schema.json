@@ -2,22 +2,103 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Mission Control Tasks",
   "type": "object",
-  "required": ["agents"],
+  "required": [
+    "agents"
+  ],
   "properties": {
-    "generated_at": { "type": "string", "format": "date-time" },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "agents": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "name", "status", "current_task", "progress", "updated_at"],
+        "required": [
+          "id",
+          "name",
+          "status",
+          "current_task",
+          "progress",
+          "updated_at"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "status": { "type": "string", "enum": ["online", "busy", "idle", "offline"] },
-          "current_task": { "type": "string" },
-          "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
-          "updated_at": { "type": "string", "format": "date-time" },
-          "links": { "type": "array", "items": { "type": "string", "format": "uri" } }
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "online",
+              "busy",
+              "idle",
+              "offline"
+            ]
+          },
+          "current_task": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "active_task_id": {
+            "type": "string"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "title",
+                "status",
+                "priority"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "queued",
+                    "done",
+                    "blocked"
+                  ]
+                },
+                "progress": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "priority": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          }
         },
         "additionalProperties": false
       }

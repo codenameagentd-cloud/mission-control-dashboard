@@ -67,3 +67,24 @@ Example:
 
 ## Platform-agnostic updates
 - All agent updates (Discord/Telegram/other) must write to `data/tasks.json` and `data/activities.json` so the dashboard stays in sync.
+
+
+## Multi-task (P3)
+Agents can optionally provide multiple tasks per agent with an active task pointer.
+
+Example:
+```
+{
+  "id": "naomi",
+  "active_task_id": "t-102",
+  "tasks": [
+    {"id":"t-101","title":"需求規格撰寫","status":"done","priority":2},
+    {"id":"t-102","title":"P3 Task Mgmt","status":"active","priority":1},
+    {"id":"t-103","title":"競品分析","status":"queued","priority":3}
+  ]
+}
+```
+Notes:
+- `active_task_id` selects the current active task.
+- `tasks[].priority` lower = higher priority.
+- `current_task` is kept for backward compatibility.
