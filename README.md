@@ -105,3 +105,8 @@ Run via cron (example):
 ```
 */1 * * * * AGENT_ID=naomi /usr/bin/env python3 /path/to/tools/dispatcher.py
 ```
+
+
+### task_queue (UI)
+The UI may emit `task_queue[]` with `active: true/false` per item. This is equivalent to `tasks[]` + `active_task_id`.
+If both exist, `task_queue` takes precedence in UI; agents may normalize to `tasks[]`.
