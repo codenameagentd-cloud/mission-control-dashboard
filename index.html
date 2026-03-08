@@ -308,6 +308,120 @@
     .grid { grid-template-columns: 1fr; }
     header { flex-direction: column; align-items: flex-start; gap: 16px; }
   }
+
+  /* Edit Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 380px;
+    max-width: 90vw;
+  }
+
+  .modal h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: var(--font);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--text-tertiary);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+
+  .btn {
+    font-size: 13px;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.2s;
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text-secondary);
+  }
+
+  .btn-secondary:hover { background: var(--surface-hover); }
+
+  .btn-primary {
+    background: var(--text-primary);
+    color: var(--bg);
+    border-color: var(--text-primary);
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text-primary);
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.3s ease;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .card { cursor: pointer; }
+
 </style>
 </head>
 <body>
@@ -371,7 +485,7 @@ function renderAgents(agents) {
       ? `<span class="completed-count">${done} done today</span>`
       : '';
     return `
-    <div class="card">
+    <div class="card" onclick="openModal('${a.id}')">
       <div class="card-header">
         <span class="agent-name">${a.name}</span>
         <span class="status-badge ${a.status}">${a.status}</span>
@@ -424,6 +538,7 @@ async function refresh() {
       fetchJSON(DATA_BASE + 'activities.json')
     ]);
     activitiesData = activities.events || [];
+    currentTasks = tasks;
     renderAgents(tasks.agents || []);
     renderTimeline(activitiesData);
     document.getElementById('refresh-status').textContent =
@@ -464,5 +579,131 @@ const sampleEvents = [
 refresh();
 setInterval(refresh, REFRESH_INTERVAL);
 </script>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="modal-title">Edit Agent</h3>
+    <div class="field">
+      <label>Status</label>
+      <select id="edit-status">
+        <option value="online">Online</option>
+        <option value="busy">Busy</option>
+        <option value="idle">Idle</option>
+        <option value="offline">Offline</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Current Task</label>
+      <input type="text" id="edit-task" placeholder="What are they working on?">
+    </div>
+    <div class="field">
+      <label>Progress</label>
+      <input type="range" id="edit-progress" min="0" max="100" step="5" oninput="document.getElementById('progress-val').textContent=this.value+'%'">
+      <span id="progress-val" style="font-size:11px;color:var(--text-tertiary)">0%</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveAgent()">Save</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const REPO = 'codenameagentd-cloud/mission-control-dashboard';
+const BRANCH = 'main';
+let editingAgent = null;
+let currentTasks = null;
+
+function openModal(agentId) {
+  const agent = (currentTasks || {agents:[]}).agents.find(a => a.id === agentId);
+  if (!agent) return;
+  editingAgent = agentId;
+  document.getElementById('modal-title').textContent = agent.name;
+  document.getElementById('edit-status').value = agent.status;
+  document.getElementById('edit-task').value = agent.current_task || '';
+  document.getElementById('edit-progress').value = agent.progress;
+  document.getElementById('progress-val').textContent = agent.progress + '%';
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+  editingAgent = null;
+}
+
+function showToast(msg, duration) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration || 3000);
+}
+
+async function saveAgent() {
+  if (!editingAgent || !currentTasks) return;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    const agent = currentTasks.agents.find(a => a.id === editingAgent);
+    agent.status = document.getElementById('edit-status').value;
+    agent.current_task = document.getElementById('edit-task').value;
+    agent.progress = parseInt(document.getElementById('edit-progress').value);
+    agent.updated_at = new Date().toISOString();
+    currentTasks.generated_at = new Date().toISOString();
+
+    // Get current file SHA
+    const metaRes = await fetch(`https://api.github.com/repos/${REPO}/contents/data/tasks.json?ref=${BRANCH}`, {
+      headers: ghHeaders()
+    });
+    if (!metaRes.ok) throw new Error('Failed to read file');
+    const meta = await metaRes.json();
+
+    // Update file
+    const updateRes = await fetch(`https://api.github.com/repos/${REPO}/contents/data/tasks.json`, {
+      method: 'PUT',
+      headers: ghHeaders(),
+      body: JSON.stringify({
+        message: `Update ${agent.name}: ${agent.status} — ${agent.current_task || 'idle'}`,
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(currentTasks, null, 2)))),
+        sha: meta.sha,
+        branch: BRANCH
+      })
+    });
+
+    if (!updateRes.ok) throw new Error('Failed to save');
+    showToast('Saved — refreshing…');
+    closeModal();
+    setTimeout(refresh, 2000);
+  } catch (e) {
+    showToast('Error: ' + e.message, 5000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+}
+
+function ghHeaders() {
+  const token = localStorage.getItem('gh_token');
+  const h = { 'Accept': 'application/vnd.github.v3+json' };
+  if (token) h['Authorization'] = 'token ' + token;
+  return h;
+}
+
+// Token setup UI
+if (!localStorage.getItem('gh_token')) {
+  const notice = document.createElement('div');
+  notice.style.cssText = 'position:fixed;top:12px;right:12px;z-index:50;';
+  notice.innerHTML = '<button class="btn btn-secondary" onclick="promptToken()" style="font-size:11px">🔑 Set GitHub Token</button>';
+  document.body.appendChild(notice);
+}
+
+function promptToken() {
+  const t = prompt('GitHub Personal Access Token (repo scope):');
+  if (t) { localStorage.setItem('gh_token', t.trim()); location.reload(); }
+}
+</script>
+
 </body>
 </html>
