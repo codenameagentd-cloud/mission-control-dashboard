@@ -752,10 +752,10 @@ const sampleEvents = [
   { ts: new Date(Date.now() - 360000).toISOString(), agent_id: 'jennie', type: 'updated', summary: 'Daily briefing in progress' }
 ];
 
-// Onboarding
-if (!localStorage.getItem('gh_token')) {
-  document.getElementById('onboarding').innerHTML = '<div class="onboarding-banner">⚠️ Viewing sample data — <button onclick="promptToken()">Connect GitHub</button> to see live agent data</div>';
-  document.body.style.paddingTop = '40px';
+
+
+
+
 }
 function promptToken() {
   const t = prompt('GitHub Personal Access Token (repo scope):');
