@@ -646,6 +646,33 @@
     border-top: 1px solid var(--border);
   }
 
+
+  .batch-bar {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    gap: 10px;
+    align-items: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    z-index: 1500;
+    font-size: 13px;
+  }
+  .batch-bar.active { display: flex; }
+  .batch-bar .batch-count { color: var(--text); font-weight: 600; margin-right: 4px; }
+  .batch-bar button {
+    padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px;
+  }
+  .batch-bar button:hover { background: rgba(96,165,250,0.15); color: var(--text); }
+  .batch-bar button.danger:hover { background: rgba(239,68,68,0.15); color: #f87171; }
+  .task-check { width: 14px; height: 14px; accent-color: #60a5fa; cursor: pointer; flex-shrink: 0; }
+
 </style>
 </head>
 <body>
@@ -1003,6 +1030,64 @@ document.addEventListener('keydown', function(e) {
     else openCmdBar();
   }
 });
+
+
+let batchSelected = new Set();
+function toggleBatchSelect(agentId, taskId, cb) {
+  const key = agentId + '::' + taskId;
+  if (cb.checked) batchSelected.add(key); else batchSelected.delete(key);
+  const bar = document.getElementById('batch-bar');
+  document.getElementById('batch-count').textContent = batchSelected.size;
+  bar.classList.toggle('active', batchSelected.size > 0);
+}
+function clearBatchSelection() {
+  batchSelected.clear();
+  document.querySelectorAll('.task-check').forEach(c => c.checked = false);
+  document.getElementById('batch-bar').classList.remove('active');
+}
+async function batchComplete() {
+  if (!currentTasks) return;
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) { a.task_queue.splice(i, 1); logActivity(aid, 'completed', 'Batch complete'); }
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch completed');
+  await commitTasks('Batch complete').catch(() => showToast('Save failed', 5000));
+}
+async function batchDelete() {
+  if (!currentTasks) return;
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) a.task_queue.splice(i, 1);
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch deleted');
+  await commitTasks('Batch delete').catch(() => showToast('Save failed', 5000));
+}
+function batchReassign() {
+  if (!currentTasks) return;
+  const names = currentTasks.agents.map(a => a.id).join(', ');
+  const target = prompt('Reassign to: ' + names);
+  if (!target) return;
+  const ta = currentTasks.agents.find(a => a.id === target.toLowerCase());
+  if (!ta) { showToast('Unknown agent'); return; }
+  if (!ta.task_queue) ta.task_queue = [];
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    if (aid === ta.id) continue;
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) { const [t] = a.task_queue.splice(i, 1); t.active = false; ta.task_queue.push(t); }
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Reassigned to ' + ta.name);
+  commitTasks('Batch reassign to ' + ta.name).catch(() => showToast('Save failed', 5000));
+}
 
 </script>
 
@@ -1516,6 +1601,64 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+
+let batchSelected = new Set();
+function toggleBatchSelect(agentId, taskId, cb) {
+  const key = agentId + '::' + taskId;
+  if (cb.checked) batchSelected.add(key); else batchSelected.delete(key);
+  const bar = document.getElementById('batch-bar');
+  document.getElementById('batch-count').textContent = batchSelected.size;
+  bar.classList.toggle('active', batchSelected.size > 0);
+}
+function clearBatchSelection() {
+  batchSelected.clear();
+  document.querySelectorAll('.task-check').forEach(c => c.checked = false);
+  document.getElementById('batch-bar').classList.remove('active');
+}
+async function batchComplete() {
+  if (!currentTasks) return;
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) { a.task_queue.splice(i, 1); logActivity(aid, 'completed', 'Batch complete'); }
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch completed');
+  await commitTasks('Batch complete').catch(() => showToast('Save failed', 5000));
+}
+async function batchDelete() {
+  if (!currentTasks) return;
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) a.task_queue.splice(i, 1);
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Batch deleted');
+  await commitTasks('Batch delete').catch(() => showToast('Save failed', 5000));
+}
+function batchReassign() {
+  if (!currentTasks) return;
+  const names = currentTasks.agents.map(a => a.id).join(', ');
+  const target = prompt('Reassign to: ' + names);
+  if (!target) return;
+  const ta = currentTasks.agents.find(a => a.id === target.toLowerCase());
+  if (!ta) { showToast('Unknown agent'); return; }
+  if (!ta.task_queue) ta.task_queue = [];
+  for (const key of batchSelected) {
+    const [aid, tid] = key.split('::');
+    if (aid === ta.id) continue;
+    const a = currentTasks.agents.find(x => x.id === aid);
+    if (!a || !a.task_queue) continue;
+    const i = a.task_queue.findIndex(t => t.id === tid);
+    if (i >= 0) { const [t] = a.task_queue.splice(i, 1); t.active = false; ta.task_queue.push(t); }
+  }
+  clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Reassigned to ' + ta.name);
+  commitTasks('Batch reassign to ' + ta.name).catch(() => showToast('Save failed', 5000));
+}
+
 </script>
 
 
@@ -1525,6 +1668,15 @@ document.addEventListener('keydown', function(e) {
     <div class="cmd-results" id="cmd-results"></div>
     <div class="cmd-hint">⌘K to open · Esc to close · Enter to dispatch · @agent to filter</div>
   </div>
+</div>
+
+
+<div class="batch-bar" id="batch-bar">
+  <span class="batch-count" id="batch-count">0</span> selected
+  <button onclick="batchReassign()">Reassign</button>
+  <button onclick="batchComplete()">Complete</button>
+  <button class="danger" onclick="batchDelete()">Delete</button>
+  <button onclick="clearBatchSelection()">Cancel</button>
 </div>
 
 </body>
