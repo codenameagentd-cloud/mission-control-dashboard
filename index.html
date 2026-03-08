@@ -309,6 +309,79 @@
     header { flex-direction: column; align-items: flex-start; gap: 16px; }
   }
 
+
+  /* Trend Chart */
+  .trend-section {
+    margin-top: 48px;
+  }
+
+  .chart-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 120px;
+    padding: 16px 0;
+  }
+
+  .chart-day {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .chart-bars {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    flex: 1;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .chart-bar {
+    width: 8px;
+    min-height: 2px;
+    border-radius: 2px;
+    transition: height 0.4s ease;
+  }
+
+  .chart-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.02em;
+  }
+
+  .chart-count {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trend-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
   /* Edit Modal */
   .modal-overlay {
     display: none;
@@ -441,6 +514,15 @@
 
   <div class="grid" id="agent-grid"></div>
 
+  
+  <div class="trend-section">
+    <div class="section-header">
+      <h2>7-Day Activity</h2>
+    </div>
+    <div class="chart-container" id="trend-chart"></div>
+    <div class="trend-legend" id="trend-legend"></div>
+  </div>
+
   <div class="timeline-section">
     <div class="section-header">
       <h2>Activity Timeline</h2>
@@ -541,6 +623,7 @@ async function refresh() {
     currentTasks = tasks;
     renderAgents(tasks.agents || []);
     renderTimeline(activitiesData);
+    renderTrend(activitiesData);
     document.getElementById('refresh-status').textContent =
       'Updated ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   } catch (e) {
@@ -548,6 +631,7 @@ async function refresh() {
     activitiesData = sampleEvents;
     renderAgents(sampleAgents);
     renderTimeline(sampleEvents);
+    renderTrend(sampleEvents);
   }
 }
 
@@ -610,6 +694,69 @@ setInterval(refresh, REFRESH_INTERVAL);
 <div class="toast" id="toast"></div>
 
 <script>
+
+const AGENT_COLORS = {
+  lisa: '#a78bfa',
+  jony: '#60a5fa',
+  jarvis: '#34d399',
+  naomi: '#fbbf24',
+  jennie: '#f472b6'
+};
+
+function renderTrend(events) {
+  const chart = document.getElementById('trend-chart');
+  const legend = document.getElementById('trend-legend');
+  const days = [];
+  const today = new Date();
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const agentIds = [...new Set(events.map(e => e.agent_id))];
+  if (!agentIds.length) agentIds.push('lisa','jony','jarvis','naomi','jennie');
+
+  // Count completed per agent per day
+  const counts = {};
+  days.forEach(d => {
+    counts[d] = {};
+    agentIds.forEach(a => counts[d][a] = 0);
+  });
+
+  events.filter(e => e.type === 'completed').forEach(e => {
+    const day = e.ts.slice(0, 10);
+    if (counts[day] && counts[day][e.agent_id] !== undefined) {
+      counts[day][e.agent_id]++;
+    }
+  });
+
+  const maxTotal = Math.max(1, ...days.map(d =>
+    agentIds.reduce((s, a) => s + counts[d][a], 0)
+  ));
+
+  chart.innerHTML = days.map(d => {
+    const date = new Date(d + 'T00:00:00');
+    const label = dayNames[date.getDay()];
+    const total = agentIds.reduce((s, a) => s + counts[d][a], 0);
+    const bars = agentIds.map(a => {
+      const h = counts[d][a] > 0 ? Math.max(4, (counts[d][a] / maxTotal) * 80) : 0;
+      return h > 0 ? '<div class="chart-bar" style="height:' + h + 'px;background:' + (AGENT_COLORS[a] || '#666') + '"></div>' : '';
+    }).join('');
+    return '<div class="chart-day">' +
+      (total > 0 ? '<span class="chart-count">' + total + '</span>' : '') +
+      '<div class="chart-bars">' + (bars || '<div class="chart-bar" style="height:2px;background:var(--border)"></div>') + '</div>' +
+      '<span class="chart-label">' + label + '</span></div>';
+  }).join('');
+
+  legend.innerHTML = agentIds.map(a =>
+    '<div class="legend-item"><div class="legend-dot" style="background:' +
+    (AGENT_COLORS[a] || '#666') + '"></div>' + a + '</div>'
+  ).join('');
+}
+
 const REPO = 'codenameagentd-cloud/mission-control-dashboard';
 const BRANCH = 'main';
 let editingAgent = null;
