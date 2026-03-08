@@ -48,8 +48,14 @@ def main():
     state = load_state()
     prev = state.get(AGENT_ID, {})
 
-    active = agent.get("active_task_id")
-    priorities = [(t.get("id"), t.get("priority")) for t in agent.get("tasks", [])]
+    # support task_queue (with active flag) or tasks+active_task_id
+    task_queue = agent.get("task_queue")
+    if task_queue:
+        active = next((t.get("id") for t in task_queue if t.get("active") is True), None)
+        priorities = [(t.get("id"), t.get("priority")) for t in task_queue]
+    else:
+        active = agent.get("active_task_id")
+        priorities = [(t.get("id"), t.get("priority")) for t in agent.get("tasks", [])]
     priorities_sorted = sorted([p for p in priorities if p[0]], key=lambda x: x[1] or 0)
 
     changed = False
