@@ -88,3 +88,8 @@ Notes:
 - `active_task_id` selects the current active task.
 - `tasks[].priority` lower = higher priority.
 - `current_task` is kept for backward compatibility.
+
+
+### Progress
+- Prefer `tasks[].progress` for per-task progress.
+- Agent-level `progress` can be kept for backward compatibility (optional/derived from active task).
