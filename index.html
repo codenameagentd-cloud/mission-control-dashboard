@@ -673,6 +673,25 @@
   .batch-bar button.danger:hover { background: rgba(239,68,68,0.15); color: #f87171; }
   .task-check { width: 14px; height: 14px; accent-color: #60a5fa; cursor: pointer; flex-shrink: 0; }
 
+
+  .dep-graph {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+  }
+  .dep-graph h2 { font-size: 14px; margin: 0 0 16px; color: var(--text); }
+  .dep-graph svg { width: 100%; height: 200px; }
+  .dep-node {
+    cursor: pointer;
+  }
+  .dep-node circle { transition: all 0.2s; }
+  .dep-node:hover circle { r: 22; }
+  .dep-edge { stroke: var(--border); stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+  .dep-edge.blocked { stroke: #f87171; stroke-dasharray: 4,3; }
+  .dep-label { font-size: 11px; fill: var(--text); text-anchor: middle; pointer-events: none; }
+
 </style>
 </head>
 <body>
@@ -817,6 +836,7 @@ async function refresh() {
     });
 
     checkSLA(currentTasks.agents);
+    renderDependencyGraph(currentTasks.agents);
     renderTimeline(activitiesData);
     renderTrend(activitiesData);
     document.getElementById('refresh-status').textContent =
@@ -826,6 +846,7 @@ async function refresh() {
     activitiesData = sampleEvents;
     renderAgents(sampleAgents);
     checkSLA(sampleAgents);
+    renderDependencyGraph(sampleAgents);
     renderTimeline(sampleEvents);
     renderTrend(sampleEvents);
   }
@@ -1087,6 +1108,79 @@ function batchReassign() {
   }
   clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Reassigned to ' + ta.name);
   commitTasks('Batch reassign to ' + ta.name).catch(() => showToast('Save failed', 5000));
+}
+
+
+function renderDependencyGraph(agents) {
+  const svg = document.getElementById('dep-svg');
+  if (!svg) return;
+  
+  // Build dependency map from task data
+  const deps = [];
+  const agentMap = {};
+  const positions = {};
+  const agentIds = agents.map(a => a.id);
+  
+  // Position agents in a circle
+  const cx = 300, cy = 100, rx = 220, ry = 70;
+  agentIds.forEach((id, i) => {
+    const angle = (i / agentIds.length) * Math.PI * 2 - Math.PI / 2;
+    positions[id] = { x: cx + rx * Math.cos(angle), y: cy + ry * Math.sin(angle) };
+    agentMap[id] = agents[i];
+  });
+  
+  // Infer dependencies from task descriptions (mentions of other agents)
+  agents.forEach(a => {
+    const queue = a.task_queue || [];
+    queue.forEach(t => {
+      const title = (t.title || '').toLowerCase();
+      agentIds.forEach(otherId => {
+        if (otherId !== a.id && title.includes(otherId)) {
+          deps.push({ from: a.id, to: otherId, task: t.title, blocked: t.priority === 'high' });
+        }
+      });
+    });
+    // Also check current_task
+    const ct = (a.current_task || '').toLowerCase();
+    agentIds.forEach(otherId => {
+      if (otherId !== a.id && ct.includes(otherId)) {
+        if (!deps.find(d => d.from === a.id && d.to === otherId))
+          deps.push({ from: a.id, to: otherId, task: a.current_task, blocked: false });
+      }
+    });
+  });
+  
+  let html = svg.innerHTML.split('</defs>')[0] + '</defs>';
+  
+  // Draw edges
+  deps.forEach(d => {
+    const from = positions[d.from];
+    const to = positions[d.to];
+    if (!from || !to) return;
+    const mx = (from.x + to.x) / 2;
+    const my = (from.y + to.y) / 2 - 20;
+    html += '<path class="dep-edge' + (d.blocked ? ' blocked' : '') + '" d="M' + from.x + ',' + from.y + ' Q' + mx + ',' + my + ' ' + to.x + ',' + to.y + '"/>';
+  });
+  
+  // Draw nodes
+  agentIds.forEach(id => {
+    const p = positions[id];
+    const a = agentMap[id];
+    const color = AGENT_COLORS[id] || '#666';
+    const statusColor = a.status === 'busy' ? '#fbbf24' : a.status === 'online' ? '#34d399' : a.status === 'offline' ? '#6b7280' : '#9ca3af';
+    html += '<g class="dep-node" onclick="openModal(\'' + id + '\')">';
+    html += '<circle cx="' + p.x + '" cy="' + p.y + '" r="18" fill="' + color + '" opacity="0.2" stroke="' + color + '" stroke-width="2"/>';
+    html += '<circle cx="' + (p.x + 14) + '" cy="' + (p.y - 14) + '" r="4" fill="' + statusColor + '"/>';
+    html += '<text class="dep-label" x="' + p.x + '" y="' + (p.y + 4) + '">' + (a.name || id) + '</text>';
+    html += '</g>';
+  });
+  
+  // Show message if no deps
+  if (deps.length === 0) {
+    html += '<text class="dep-label" x="300" y="190" style="fill:var(--text-tertiary);font-size:10px">No cross-agent dependencies detected in current tasks</text>';
+  }
+  
+  svg.innerHTML = html;
 }
 
 </script>
@@ -1657,6 +1751,79 @@ function batchReassign() {
   }
   clearBatchSelection(); renderAgents(currentTasks.agents); showToast('Reassigned to ' + ta.name);
   commitTasks('Batch reassign to ' + ta.name).catch(() => showToast('Save failed', 5000));
+}
+
+
+function renderDependencyGraph(agents) {
+  const svg = document.getElementById('dep-svg');
+  if (!svg) return;
+  
+  // Build dependency map from task data
+  const deps = [];
+  const agentMap = {};
+  const positions = {};
+  const agentIds = agents.map(a => a.id);
+  
+  // Position agents in a circle
+  const cx = 300, cy = 100, rx = 220, ry = 70;
+  agentIds.forEach((id, i) => {
+    const angle = (i / agentIds.length) * Math.PI * 2 - Math.PI / 2;
+    positions[id] = { x: cx + rx * Math.cos(angle), y: cy + ry * Math.sin(angle) };
+    agentMap[id] = agents[i];
+  });
+  
+  // Infer dependencies from task descriptions (mentions of other agents)
+  agents.forEach(a => {
+    const queue = a.task_queue || [];
+    queue.forEach(t => {
+      const title = (t.title || '').toLowerCase();
+      agentIds.forEach(otherId => {
+        if (otherId !== a.id && title.includes(otherId)) {
+          deps.push({ from: a.id, to: otherId, task: t.title, blocked: t.priority === 'high' });
+        }
+      });
+    });
+    // Also check current_task
+    const ct = (a.current_task || '').toLowerCase();
+    agentIds.forEach(otherId => {
+      if (otherId !== a.id && ct.includes(otherId)) {
+        if (!deps.find(d => d.from === a.id && d.to === otherId))
+          deps.push({ from: a.id, to: otherId, task: a.current_task, blocked: false });
+      }
+    });
+  });
+  
+  let html = svg.innerHTML.split('</defs>')[0] + '</defs>';
+  
+  // Draw edges
+  deps.forEach(d => {
+    const from = positions[d.from];
+    const to = positions[d.to];
+    if (!from || !to) return;
+    const mx = (from.x + to.x) / 2;
+    const my = (from.y + to.y) / 2 - 20;
+    html += '<path class="dep-edge' + (d.blocked ? ' blocked' : '') + '" d="M' + from.x + ',' + from.y + ' Q' + mx + ',' + my + ' ' + to.x + ',' + to.y + '"/>';
+  });
+  
+  // Draw nodes
+  agentIds.forEach(id => {
+    const p = positions[id];
+    const a = agentMap[id];
+    const color = AGENT_COLORS[id] || '#666';
+    const statusColor = a.status === 'busy' ? '#fbbf24' : a.status === 'online' ? '#34d399' : a.status === 'offline' ? '#6b7280' : '#9ca3af';
+    html += '<g class="dep-node" onclick="openModal(\'' + id + '\')">';
+    html += '<circle cx="' + p.x + '" cy="' + p.y + '" r="18" fill="' + color + '" opacity="0.2" stroke="' + color + '" stroke-width="2"/>';
+    html += '<circle cx="' + (p.x + 14) + '" cy="' + (p.y - 14) + '" r="4" fill="' + statusColor + '"/>';
+    html += '<text class="dep-label" x="' + p.x + '" y="' + (p.y + 4) + '">' + (a.name || id) + '</text>';
+    html += '</g>';
+  });
+  
+  // Show message if no deps
+  if (deps.length === 0) {
+    html += '<text class="dep-label" x="300" y="190" style="fill:var(--text-tertiary);font-size:10px">No cross-agent dependencies detected in current tasks</text>';
+  }
+  
+  svg.innerHTML = html;
 }
 
 </script>
