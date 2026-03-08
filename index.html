@@ -924,11 +924,25 @@ function manualRefresh() {
 }
 
 const sampleAgents = [
-  { id: 'lisa', name: 'Lisa', status: 'online', current_task: 'QA + 進度追蹤', progress: 40, updated_at: new Date().toISOString() },
-  { id: 'jony', name: 'Jony', status: 'busy', current_task: 'Dashboard Phase 2', progress: 30, updated_at: new Date().toISOString() },
-  { id: 'jarvis', name: 'Jarvis', status: 'busy', current_task: 'Repo + Schema 建置', progress: 90, updated_at: new Date().toISOString() },
-  { id: 'naomi', name: 'Naomi', status: 'online', current_task: '需求規格撰寫', progress: 100, updated_at: new Date().toISOString() },
-  { id: 'jennie', name: 'Jennie', status: 'online', current_task: 'Daily Briefing + 生活管理', progress: 50, updated_at: new Date().toISOString() }
+  { id: 'lisa', name: 'Lisa', status: 'online', current_task: 'QA + 進度追蹤', progress: 40, updated_at: new Date().toISOString(), task_queue: [
+    { id: 'l1', title: 'QA + 進度追蹤', progress: 40, priority: 'HIGH', active: true },
+    { id: 'l2', title: 'Gap analysis review', progress: 100, priority: 'LOW', active: false }
+  ]},
+  { id: 'jony', name: 'Jony', status: 'busy', current_task: 'Dashboard Phase 2', progress: 30, updated_at: new Date().toISOString(), task_queue: [
+    { id: 'j1', title: 'Dashboard Phase 2', progress: 30, priority: 'HIGH', active: true },
+    { id: 'j2', title: 'Design Diary', progress: 0, priority: 'LOW', active: false }
+  ]},
+  { id: 'jarvis', name: 'Jarvis', status: 'busy', current_task: 'Repo + Schema 建置', progress: 90, updated_at: new Date().toISOString(), task_queue: [
+    { id: 'v1', title: 'Repo + Schema 建置', progress: 90, priority: 'HIGH', active: true },
+    { id: 'v2', title: 'Dispatcher cron setup', progress: 100, priority: 'LOW', active: false }
+  ]},
+  { id: 'naomi', name: 'Naomi', status: 'online', current_task: '需求規格撰寫', progress: 100, updated_at: new Date().toISOString(), task_queue: [
+    { id: 'n1', title: '需求規格撰寫', progress: 100, priority: 'HIGH', active: true },
+    { id: 'n2', title: 'Feature comparison', progress: 0, priority: 'LOW', active: false }
+  ]},
+  { id: 'jennie', name: 'Jennie', status: 'online', current_task: 'Daily Briefing + 生活管理', progress: 50, updated_at: new Date().toISOString(), task_queue: [
+    { id: 'e1', title: 'Daily Briefing + 生活管理', progress: 50, priority: 'HIGH', active: true }
+  ]}
 ];
 
 const sampleEvents = [
