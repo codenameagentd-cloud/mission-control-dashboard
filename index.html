@@ -566,6 +566,23 @@
 
   .card { cursor: pointer; }
 
+
+  .sla-alert {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #f87171;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sla-alert::before {
+    content: '⏰';
+  }
+
 </style>
 </head>
 <body>
@@ -709,6 +726,7 @@ async function refresh() {
       }
     });
 
+    checkSLA(currentTasks.agents);
     renderTimeline(activitiesData);
     renderTrend(activitiesData);
     document.getElementById('refresh-status').textContent =
@@ -717,9 +735,33 @@ async function refresh() {
     document.getElementById('refresh-status').textContent = 'Using sample data';
     activitiesData = sampleEvents;
     renderAgents(sampleAgents);
+    checkSLA(sampleAgents);
     renderTimeline(sampleEvents);
     renderTrend(sampleEvents);
   }
+}
+
+
+function checkSLA(agents) {
+  const now = Date.now();
+  const SLA_HOURS = 2;
+  agents.forEach(a => {
+    const card = document.querySelector('.card[onclick*="' + a.id + '"]');
+    if (!card) return;
+    // Remove old alert
+    const old = card.querySelector('.sla-alert');
+    if (old) old.remove();
+    
+    if (a.status === 'offline' || a.status === 'idle') return;
+    const updated = new Date(a.updated_at).getTime();
+    const hoursAgo = (now - updated) / (1000 * 60 * 60);
+    if (hoursAgo > SLA_HOURS) {
+      const alert = document.createElement('div');
+      alert.className = 'sla-alert';
+      alert.textContent = 'No update for ' + Math.floor(hoursAgo) + 'h — may be stalled';
+      card.appendChild(alert);
+    }
+  });
 }
 
 function manualRefresh() {
