@@ -791,9 +791,9 @@ function renderDepGraph() {
     h += '<text x="'+x[a]+'" y="68" text-anchor="middle" fill="#8888a0" font-size="10">'+a+'</text>';
   });
   deps.forEach(d => {
-    h += '<line x1="'+(x[d.from]+14)+'" y1="40" x2="'+(x[d.to]-14)+'" y2="40" stroke="#2a2a3a" stroke-width="2" marker-end="url(#arrow)"/>';
+    h += '<line x1="'+(x[d.from]+14)+'" y1="40" x2="'+(x[d.to]-14)+'" y2="40" stroke="#555577" stroke-width="2" marker-end="url(#arrow)"/>';
   });
-  h += '<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2a2a3a"/></marker></defs>';
+  h += '<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#555577"/></marker></defs>';
   h += '</svg>';
   el.innerHTML = h;
 }
