@@ -508,6 +508,8 @@ function renderOverview() {
 }
 
 function renderAgentsTab() {
+  console.log('renderAgentsTab called, agentsData.length:', agentsData.length);
+  if (!agentsData.length) { document.getElementById('agents-detail').innerHTML = '<div style="color:red;font-size:20px;padding:40px;">DEBUG: agentsData is empty!</div>'; return; }
   let html = '';
   agentsData.forEach(a => {
     const queue = a.task_queue || [];
@@ -719,7 +721,7 @@ function switchTab(name) {
   if (tab) tab.classList.add('active');
   const content = document.getElementById('tab-'+name);
   if (content) content.classList.add('active');
-  if (name === 'agents') { try { if (!agentsData.length) agentsData = sampleAgents; renderAgentsTab(); } catch(e) { console.error('renderAgentsTab:', e); } }
+  if (name === 'agents') { try { console.log('switchTab agents, agentsData:', agentsData.length, 'sampleAgents:', typeof sampleAgents); if (!agentsData.length) agentsData = sampleAgents; renderAgentsTab(); } catch(e) { console.error('renderAgentsTab:', e); document.getElementById('agents-detail').innerHTML = '<div style="color:red;font-size:20px;padding:40px;">ERROR: ' + e.message + '</div>'; } }
   if (name === 'tasks') { try { renderKanban(); } catch(e) { console.error('renderKanban:', e); } }
   if (name === 'overview') { try { renderOverview(); renderTrend(activitiesData); renderDeps(); checkSLA(agentsData); } catch(e) { console.error('renderOverview:', e); } }
   closeCmdK();
