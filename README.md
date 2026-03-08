@@ -64,3 +64,6 @@ Example:
 ## Suggested retention
 - Keep only latest 50 events for MVP (schema allows up to 100).
 - Frontend can display latest 10.
+
+## Platform-agnostic updates
+- All agent updates (Discord/Telegram/other) must write to `data/tasks.json` and `data/activities.json` so the dashboard stays in sync.
