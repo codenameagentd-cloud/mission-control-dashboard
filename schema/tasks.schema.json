@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mission Control Tasks",
+  "type": "object",
+  "required": ["agents"],
+  "properties": {
+    "generated_at": { "type": "string", "format": "date-time" },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "status", "current_task", "progress", "updated_at"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "status": { "type": "string", "enum": ["online", "busy", "idle", "offline"] },
+          "current_task": { "type": "string" },
+          "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "links": { "type": "array", "items": { "type": "string", "format": "uri" } }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

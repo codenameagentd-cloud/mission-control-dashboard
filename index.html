@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission Control</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface-hover: #1a1a1a;
+    --border: #222;
+    --text-primary: #e8e8e8;
+    --text-secondary: #777;
+    --text-tertiary: #555;
+    --accent: #fff;
+    --online: #34d399;
+    --busy: #f59e0b;
+    --idle: #6b7280;
+    --offline: #374151;
+    --blocked: #ef4444;
+    --radius: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+
+  header {
+    margin-bottom: 48px;
+  }
+
+  header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  header .meta {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--online);
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: background 0.2s ease;
+  }
+
+  .card:hover {
+    background: var(--surface-hover);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .agent-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--offline);
+    color: var(--text-primary);
+  }
+
+  .status-badge.online { background: rgba(52,211,153,0.15); color: var(--online); }
+  .status-badge.busy { background: rgba(245,158,11,0.15); color: var(--busy); }
+  .status-badge.idle { background: rgba(107,114,128,0.15); color: var(--idle); }
+  .status-badge.offline { background: rgba(55,65,81,0.3); color: var(--text-tertiary); }
+
+  .task-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    min-height: 18px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--text-secondary);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .card-footer {
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .activity-section {
+    margin-top: 48px;
+  }
+
+  .activity-section h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+  }
+
+  .activity-list {
+    list-style: none;
+  }
+
+  .activity-item {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .activity-item:last-child { border-bottom: none; }
+
+  .activity-time {
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    min-width: 48px;
+    flex-shrink: 0;
+  }
+
+  .activity-agent {
+    color: var(--text-secondary);
+    font-weight: 500;
+    min-width: 56px;
+    flex-shrink: 0;
+  }
+
+  .activity-type {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 1px 5px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .activity-type.started { background: rgba(52,211,153,0.15); color: var(--online); }
+  .activity-type.completed { background: rgba(52,211,153,0.15); color: var(--online); }
+  .activity-type.updated { background: rgba(245,158,11,0.12); color: var(--busy); }
+  .activity-type.blocked { background: rgba(239,68,68,0.15); color: var(--blocked); }
+  .activity-type.note { background: rgba(107,114,128,0.15); color: var(--idle); }
+
+  .activity-summary {
+    color: var(--text-primary);
+  }
+
+  .empty {
+    color: var(--text-tertiary);
+    font-size: 13px;
+    text-align: center;
+    padding: 48px 0;
+  }
+
+  @media (max-width: 640px) {
+    .container { padding: 32px 16px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Mission Control</h1>
+    <div class="meta">
+      <span class="pulse"></span>
+      <span id="refresh-status">Loading…</span>
+    </div>
+  </header>
+
+  <div class="grid" id="agent-grid"></div>
+
+  <div class="activity-section">
+    <h2>Recent Activity</h2>
+    <ul class="activity-list" id="activity-list">
+      <li class="empty">Loading…</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const DATA_BASE = 'data/';
+const REFRESH_INTERVAL = 30000;
+
+function relativeTime(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs / 24) + 'd ago';
+}
+
+function formatTime(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderAgents(agents) {
+  const grid = document.getElementById('agent-grid');
+  grid.innerHTML = agents.map(a => `
+    <div class="card">
+      <div class="card-header">
+        <span class="agent-name">${a.name}</span>
+        <span class="status-badge ${a.status}">${a.status}</span>
+      </div>
+      <div class="task-label">${a.current_task || 'No active task'}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <div class="progress-bar" style="flex:1;margin-bottom:0">
+          <div class="progress-fill" style="width: ${a.progress}%"></div>
+        </div>
+        <span style="font-size:11px;color:var(--text-tertiary);font-variant-numeric:tabular-nums">${a.progress}%</span>
+      </div>
+      <div class="card-footer">${relativeTime(a.updated_at)}</div>
+    </div>
+  `).join('');
+}
+
+function renderActivities(events) {
+  const list = document.getElementById('activity-list');
+  const recent = events.slice(-10).reverse();
+  if (!recent.length) {
+    list.innerHTML = '<li class="empty">No activity yet</li>';
+    return;
+  }
+  list.innerHTML = recent.map(e => `
+    <li class="activity-item">
+      <span class="activity-time">${formatTime(e.ts)}</span>
+      <span class="activity-agent">${e.agent_id}</span>
+      <span class="activity-type ${e.type}">${e.type}</span>
+      <span class="activity-summary">${e.summary}</span>
+    </li>
+  `).join('');
+}
+
+async function fetchJSON(path) {
+  const res = await fetch(path + '?t=' + Date.now());
+  if (!res.ok) throw new Error(res.status);
+  return res.json();
+}
+
+async function refresh() {
+  try {
+    const [tasks, activities] = await Promise.all([
+      fetchJSON(DATA_BASE + 'tasks.json'),
+      fetchJSON(DATA_BASE + 'activities.json')
+    ]);
+    renderAgents(tasks.agents || []);
+    renderActivities(activities.events || []);
+    document.getElementById('refresh-status').textContent =
+      'Updated ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    document.getElementById('refresh-status').textContent = 'Using sample data';
+    renderAgents(sampleAgents);
+    renderActivities(sampleEvents);
+  }
+}
+
+const sampleAgents = [
+  { id: 'lisa', name: 'Lisa', status: 'online', current_task: 'QA + 進度追蹤', progress: 40, updated_at: new Date().toISOString() },
+  { id: 'jony', name: 'Jony', status: 'busy', current_task: 'Dashboard UI 設計', progress: 60, updated_at: new Date().toISOString() },
+  { id: 'jarvis', name: 'Jarvis', status: 'busy', current_task: 'Repo + Schema 建置', progress: 90, updated_at: new Date().toISOString() },
+  { id: 'naomi', name: 'Naomi', status: 'online', current_task: '需求規格撰寫', progress: 100, updated_at: new Date().toISOString() },
+  { id: 'jennie', name: 'Jennie', status: 'online', current_task: 'Daily Briefing + 生活管理', progress: 50, updated_at: new Date().toISOString() }
+];
+
+const sampleEvents = [
+  { ts: new Date(Date.now() - 120000).toISOString(), agent_id: 'jarvis', type: 'completed', summary: 'Schema + README draft' },
+  { ts: new Date(Date.now() - 180000).toISOString(), agent_id: 'naomi', type: 'completed', summary: '需求規格 v1' },
+  { ts: new Date(Date.now() - 300000).toISOString(), agent_id: 'jony', type: 'started', summary: 'Dashboard UI prototype' },
+  { ts: new Date(Date.now() - 360000).toISOString(), agent_id: 'lisa', type: 'started', summary: 'Project kickoff' }
+];
+
+refresh();
+setInterval(refresh, REFRESH_INTERVAL);
+</script>
+</body>
+</html>

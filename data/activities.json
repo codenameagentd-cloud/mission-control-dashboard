@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-03-08T07:00:00Z",
+  "events": [
+    { "ts": "2026-03-08T06:56:00Z", "agent_id": "lisa", "type": "started", "summary": "Project kickoff" },
+    { "ts": "2026-03-08T06:56:00Z", "agent_id": "naomi", "type": "completed", "summary": "需求規格 v1" },
+    { "ts": "2026-03-08T06:57:00Z", "agent_id": "jony", "type": "started", "summary": "Dashboard UI prototype" },
+    { "ts": "2026-03-08T06:58:00Z", "agent_id": "jarvis", "type": "completed", "summary": "Schema + README draft" }
+  ]
+}

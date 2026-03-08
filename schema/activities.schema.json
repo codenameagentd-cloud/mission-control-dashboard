@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mission Control Activities",
+  "type": "object",
+  "required": [
+    "events"
+  ],
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ts",
+          "agent_id",
+          "type",
+          "summary"
+        ],
+        "properties": {
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "agent_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "started",
+              "updated",
+              "completed",
+              "blocked",
+              "note"
+            ]
+          },
+          "task_id": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "link": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "additionalProperties": false
+      },
+      "maxItems": 100
+    }
+  },
+  "additionalProperties": false
+}
