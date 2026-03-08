@@ -1868,3 +1868,53 @@ function renderDependencyGraph(agents) {
 
 </body>
 </html>
+
+<!-- Touch drag support for mobile -->
+<script>
+(function() {
+  let dragItem = null, dragIdx = -1, placeholder = null;
+
+  document.addEventListener('touchstart', function(e) {
+    const item = e.target.closest('.task-item');
+    if (!item) return;
+    dragItem = item;
+    dragIdx = parseInt(item.dataset.idx);
+    item.classList.add('dragging');
+    item.style.opacity = '0.5';
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!dragItem) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const target = el ? el.closest('.task-item') : null;
+    document.querySelectorAll('.task-item.drag-over').forEach(i => i.classList.remove('drag-over'));
+    if (target && target !== dragItem) target.classList.add('drag-over');
+  }, { passive: false });
+
+  document.addEventListener('touchend', function(e) {
+    if (!dragItem) return;
+    dragItem.classList.remove('dragging');
+    dragItem.style.opacity = '';
+    const overItem = document.querySelector('.task-item.drag-over');
+    document.querySelectorAll('.task-item.drag-over').forEach(i => i.classList.remove('drag-over'));
+    if (overItem) {
+      const toIdx = parseInt(overItem.dataset.idx);
+      const queue = overItem.closest('.task-queue');
+      if (queue && dragIdx !== toIdx) {
+        const agentId = queue.dataset.agent;
+        const agent = currentTasks.agents.find(a => a.id === agentId);
+        if (agent && agent.task_queue) {
+          const [moved] = agent.task_queue.splice(dragIdx, 1);
+          agent.task_queue.splice(toIdx, 0, moved);
+          renderAgents(currentTasks.agents);
+          commitTasks('Reorder ' + agent.name + ' tasks').then(() => logActivity(agent.id, 'task_reordered', 'Queue reordered')).catch(e => showToast('Save failed', 5000));
+        }
+      }
+    }
+    dragItem = null;
+    dragIdx = -1;
+  }, { passive: true });
+})();
+</script>
