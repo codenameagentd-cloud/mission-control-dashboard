@@ -1098,7 +1098,7 @@ function renderTaskQueue(agent) {
         ? '<button class="task-switch-btn" onclick="event.stopPropagation();switchTask(\'' + agent.id + '\',' + i + ')">Activate</button>'
         : '';
       return '<div class="task-item' + (isActive ? ' active' : '') + '" draggable="true" data-idx="' + i + '">' +
-        '<span class="task-dot ' + (isActive ? 'active' : 'queued') + '"></span>' +
+        '<input type="checkbox" class="task-check" onclick="event.stopPropagation();toggleBatchSelect(\'' + agent.id + '\',\'' + t.id + '\',this)">' + '<span class="task-dot ' + (isActive ? 'active' : 'queued') + '"></span>' +
         '<span class="task-title">' + t.title + '</span>' +
         priorityTag + switchBtn + '</div>';
     }).join('') + '</div>';
