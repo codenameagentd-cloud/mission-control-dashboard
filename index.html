@@ -583,6 +583,69 @@
     content: '⏰';
   }
 
+
+  .cmd-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 20vh;
+  }
+  .cmd-overlay.active { display: flex; }
+  .cmd-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 500px;
+    max-width: 90vw;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .cmd-input {
+    width: 100%;
+    padding: 16px 20px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 16px;
+    outline: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmd-input::placeholder { color: var(--text-tertiary); }
+  .cmd-results {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .cmd-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .cmd-item:hover, .cmd-item.selected {
+    background: rgba(96,165,250,0.15);
+    color: var(--text);
+  }
+  .cmd-item .cmd-agent {
+    font-weight: 600;
+    color: var(--text);
+    min-width: 60px;
+  }
+  .cmd-hint {
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    border-top: 1px solid var(--border);
+  }
+
 </style>
 </head>
 <body>
@@ -828,6 +891,119 @@ const sampleEvents = [
 
 refresh();
 setInterval(refresh, REFRESH_INTERVAL);
+
+const AGENTS_LIST = ['lisa','jony','jarvis','naomi','jennie'];
+
+function openCmdBar() {
+  document.getElementById('cmd-overlay').classList.add('active');
+  const input = document.getElementById('cmd-input');
+  input.value = '';
+  input.focus();
+  renderCmdResults('');
+}
+
+function closeCmdBar() {
+  document.getElementById('cmd-overlay').classList.remove('active');
+}
+
+function renderCmdResults(query) {
+  const results = document.getElementById('cmd-results');
+  if (!query.trim()) {
+    results.innerHTML = AGENTS_LIST.map(a =>
+      '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
+      '<span class="cmd-agent">@' + a + '</span> Ready for task</div>'
+    ).join('');
+    return;
+  }
+  
+  const match = query.match(/^@(\w+)\s*(.*)/);
+  if (match) {
+    const agent = match[1].toLowerCase();
+    const task = match[2];
+    if (AGENTS_LIST.includes(agent)) {
+      results.innerHTML = '<div class="cmd-item selected" onclick="dispatchTask(\'' + agent + '\',\'' + (task||'').replace(/'/g,"\\'") + '\')">' +
+        '<span class="cmd-agent">@' + agent + '</span> ' + (task || 'Type task description...') + '</div>';
+    } else {
+      const filtered = AGENTS_LIST.filter(a => a.startsWith(agent));
+      results.innerHTML = filtered.map(a =>
+        '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
+        '<span class="cmd-agent">@' + a + '</span></div>'
+      ).join('') || '<div class="cmd-item">No matching agent</div>';
+    }
+  } else {
+    results.innerHTML = AGENTS_LIST.map(a =>
+      '<div class="cmd-item" onclick="dispatchTask(\'' + a + '\',\'' + query.replace(/'/g,"\\'") + '\')">' +
+      '<span class="cmd-agent">@' + a + '</span> ' + query + '</div>'
+    ).join('');
+  }
+}
+
+function prefillAgent(agent) {
+  const input = document.getElementById('cmd-input');
+  input.value = '@' + agent + ' ';
+  input.focus();
+  renderCmdResults(input.value);
+}
+
+async function dispatchTask(agentId, taskDesc) {
+  if (!taskDesc.trim()) return;
+  closeCmdBar();
+  
+  if (!currentTasks) return;
+  const agent = currentTasks.agents.find(a => a.id === agentId);
+  if (!agent) return;
+  
+  const newTask = {
+    id: 'task-' + Date.now(),
+    title: taskDesc.trim(),
+    progress: 0,
+    priority: 'normal',
+    active: false
+  };
+  
+  if (!agent.task_queue) agent.task_queue = [];
+  agent.task_queue.push(newTask);
+  
+  // If no active task, activate this one
+  if (!agent.task_queue.some(t => t.active)) {
+    newTask.active = true;
+    agent.current_task = newTask.title;
+    agent.progress = 0;
+    if (agent.status === 'idle') agent.status = 'online';
+  }
+  
+  renderAgents(currentTasks.agents);
+  showToast('Dispatched to ' + agent.name);
+  
+  try {
+    await commitTasks('Quick assign: ' + taskDesc + ' to ' + agent.name);
+    await logActivity(agentId, 'task_added', taskDesc);
+  } catch(e) { showToast('Save failed', 5000); }
+}
+
+document.getElementById('cmd-input').addEventListener('input', function() {
+  renderCmdResults(this.value);
+});
+
+document.getElementById('cmd-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeCmdBar();
+  if (e.key === 'Enter') {
+    const match = this.value.match(/^@(\w+)\s+(.+)/);
+    if (match && AGENTS_LIST.includes(match[1].toLowerCase())) {
+      dispatchTask(match[1].toLowerCase(), match[2]);
+    }
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    const overlay = document.getElementById('cmd-overlay');
+    if (overlay.classList.contains('active')) closeCmdBar();
+    else openCmdBar();
+  }
+});
+
 </script>
 
 <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
@@ -1227,7 +1403,129 @@ function promptToken() {
   const t = prompt('GitHub Personal Access Token (repo scope):');
   if (t) { localStorage.setItem('gh_token', t.trim()); location.reload(); }
 }
+
+const AGENTS_LIST = ['lisa','jony','jarvis','naomi','jennie'];
+
+function openCmdBar() {
+  document.getElementById('cmd-overlay').classList.add('active');
+  const input = document.getElementById('cmd-input');
+  input.value = '';
+  input.focus();
+  renderCmdResults('');
+}
+
+function closeCmdBar() {
+  document.getElementById('cmd-overlay').classList.remove('active');
+}
+
+function renderCmdResults(query) {
+  const results = document.getElementById('cmd-results');
+  if (!query.trim()) {
+    results.innerHTML = AGENTS_LIST.map(a =>
+      '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
+      '<span class="cmd-agent">@' + a + '</span> Ready for task</div>'
+    ).join('');
+    return;
+  }
+  
+  const match = query.match(/^@(\w+)\s*(.*)/);
+  if (match) {
+    const agent = match[1].toLowerCase();
+    const task = match[2];
+    if (AGENTS_LIST.includes(agent)) {
+      results.innerHTML = '<div class="cmd-item selected" onclick="dispatchTask(\'' + agent + '\',\'' + (task||'').replace(/'/g,"\\'") + '\')">' +
+        '<span class="cmd-agent">@' + agent + '</span> ' + (task || 'Type task description...') + '</div>';
+    } else {
+      const filtered = AGENTS_LIST.filter(a => a.startsWith(agent));
+      results.innerHTML = filtered.map(a =>
+        '<div class="cmd-item" onclick="prefillAgent(\'' + a + '\')">' +
+        '<span class="cmd-agent">@' + a + '</span></div>'
+      ).join('') || '<div class="cmd-item">No matching agent</div>';
+    }
+  } else {
+    results.innerHTML = AGENTS_LIST.map(a =>
+      '<div class="cmd-item" onclick="dispatchTask(\'' + a + '\',\'' + query.replace(/'/g,"\\'") + '\')">' +
+      '<span class="cmd-agent">@' + a + '</span> ' + query + '</div>'
+    ).join('');
+  }
+}
+
+function prefillAgent(agent) {
+  const input = document.getElementById('cmd-input');
+  input.value = '@' + agent + ' ';
+  input.focus();
+  renderCmdResults(input.value);
+}
+
+async function dispatchTask(agentId, taskDesc) {
+  if (!taskDesc.trim()) return;
+  closeCmdBar();
+  
+  if (!currentTasks) return;
+  const agent = currentTasks.agents.find(a => a.id === agentId);
+  if (!agent) return;
+  
+  const newTask = {
+    id: 'task-' + Date.now(),
+    title: taskDesc.trim(),
+    progress: 0,
+    priority: 'normal',
+    active: false
+  };
+  
+  if (!agent.task_queue) agent.task_queue = [];
+  agent.task_queue.push(newTask);
+  
+  // If no active task, activate this one
+  if (!agent.task_queue.some(t => t.active)) {
+    newTask.active = true;
+    agent.current_task = newTask.title;
+    agent.progress = 0;
+    if (agent.status === 'idle') agent.status = 'online';
+  }
+  
+  renderAgents(currentTasks.agents);
+  showToast('Dispatched to ' + agent.name);
+  
+  try {
+    await commitTasks('Quick assign: ' + taskDesc + ' to ' + agent.name);
+    await logActivity(agentId, 'task_added', taskDesc);
+  } catch(e) { showToast('Save failed', 5000); }
+}
+
+document.getElementById('cmd-input').addEventListener('input', function() {
+  renderCmdResults(this.value);
+});
+
+document.getElementById('cmd-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeCmdBar();
+  if (e.key === 'Enter') {
+    const match = this.value.match(/^@(\w+)\s+(.+)/);
+    if (match && AGENTS_LIST.includes(match[1].toLowerCase())) {
+      dispatchTask(match[1].toLowerCase(), match[2]);
+    }
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    const overlay = document.getElementById('cmd-overlay');
+    if (overlay.classList.contains('active')) closeCmdBar();
+    else openCmdBar();
+  }
+});
+
 </script>
+
+
+<div class="cmd-overlay" id="cmd-overlay" onclick="if(event.target===this)closeCmdBar()">
+  <div class="cmd-box">
+    <input class="cmd-input" id="cmd-input" placeholder="Type @agent task description... (⌘K)" autocomplete="off">
+    <div class="cmd-results" id="cmd-results"></div>
+    <div class="cmd-hint">⌘K to open · Esc to close · Enter to dispatch · @agent to filter</div>
+  </div>
+</div>
 
 </body>
 </html>
