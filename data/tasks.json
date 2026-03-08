@@ -7,7 +7,23 @@
       "status": "online",
       "current_task": "QA + 進度追蹤",
       "progress": 40,
-      "updated_at": "2026-03-08T06:56:00Z"
+      "updated_at": "2026-03-08T06:56:00Z",
+      "task_queue": [
+        {
+          "id": "t1",
+          "title": "QA + 進度追蹤",
+          "progress": 40,
+          "priority": "normal",
+          "active": true
+        },
+        {
+          "id": "t2",
+          "title": "Review P3 features",
+          "progress": 0,
+          "priority": "normal",
+          "active": false
+        }
+      ]
     },
     {
       "id": "jony",
@@ -15,7 +31,23 @@
       "status": "busy",
       "current_task": "Dashboard UI 設計",
       "progress": 60,
-      "updated_at": "2026-03-08T06:57:00Z"
+      "updated_at": "2026-03-08T06:57:00Z",
+      "task_queue": [
+        {
+          "id": "t1",
+          "title": "Dashboard UI 設計",
+          "progress": 60,
+          "priority": "normal",
+          "active": true
+        },
+        {
+          "id": "t2",
+          "title": "Design system documentation",
+          "progress": 0,
+          "priority": "low",
+          "active": false
+        }
+      ]
     },
     {
       "id": "jarvis",
@@ -23,7 +55,23 @@
       "status": "busy",
       "current_task": "Repo + Schema 建置",
       "progress": 90,
-      "updated_at": "2026-03-08T06:58:00Z"
+      "updated_at": "2026-03-08T06:58:00Z",
+      "task_queue": [
+        {
+          "id": "t1",
+          "title": "Repo + Schema 建置",
+          "progress": 90,
+          "priority": "normal",
+          "active": true
+        },
+        {
+          "id": "t2",
+          "title": "Setup monitoring alerts",
+          "progress": 0,
+          "priority": "high",
+          "active": false
+        }
+      ]
     },
     {
       "id": "naomi",
@@ -31,7 +79,16 @@
       "status": "online",
       "current_task": "需求規格撰寫",
       "progress": 100,
-      "updated_at": "2026-03-08T06:56:00Z"
+      "updated_at": "2026-03-08T06:56:00Z",
+      "task_queue": [
+        {
+          "id": "t1",
+          "title": "需求規格撰寫",
+          "progress": 100,
+          "priority": "normal",
+          "active": true
+        }
+      ]
     },
     {
       "id": "jennie",
@@ -39,7 +96,16 @@
       "status": "online",
       "current_task": "Daily Briefing + 生活管理",
       "progress": 50,
-      "updated_at": "2026-03-08T06:55:00Z"
+      "updated_at": "2026-03-08T06:55:00Z",
+      "task_queue": [
+        {
+          "id": "t1",
+          "title": "Daily Briefing + 生活管理",
+          "progress": 50,
+          "priority": "normal",
+          "active": true
+        }
+      ]
     }
   ]
 }

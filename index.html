@@ -383,6 +383,70 @@
   }
 
 
+
+  /* Task Queue */
+  .task-queue {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: grab;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+
+  .task-item:hover { background: var(--surface-hover); }
+  .task-item.active { border-color: var(--border); background: var(--surface-hover); }
+  .task-item.dragging { opacity: 0.5; }
+  .task-item.drag-over { border-color: var(--text-tertiary); }
+
+  .task-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .task-dot.active { background: #34d399; }
+  .task-dot.queued { background: var(--text-tertiary); }
+
+  .task-title { flex: 1; color: var(--text-secondary); }
+  .task-item.active .task-title { color: var(--text-primary); }
+
+  .task-priority {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .task-priority.high { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .task-priority.low { background: rgba(156,163,175,0.15); color: #9ca3af; }
+
+  .task-switch-btn {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .task-item:hover .task-switch-btn { opacity: 1; }
+
   .tab-btn.active {
     background: var(--text-primary);
     color: var(--bg);
@@ -629,6 +693,18 @@ async function refresh() {
     activitiesData = activities.events || [];
     currentTasks = tasks;
     renderAgents(tasks.agents || []);
+    // Inject task queues into cards
+    document.querySelectorAll('.card').forEach(card => {
+      const onclick = card.getAttribute('onclick');
+      if (!onclick) return;
+      const match = onclick.match(/openModal\('(\w+)'\)/);
+      if (!match) return;
+      const agent = (currentTasks || {agents:[]}).agents.find(a => a.id === match[1]);
+      if (agent && agent.task_queue && agent.task_queue.length > 1) {
+        card.insertAdjacentHTML('beforeend', renderTaskQueue(agent));
+      }
+    });
+
     renderTimeline(activitiesData);
     renderTrend(activitiesData);
     document.getElementById('refresh-status').textContent =
@@ -748,6 +824,84 @@ setInterval(refresh, REFRESH_INTERVAL);
 <div class="toast" id="toast"></div>
 
 <script>
+
+
+function renderTaskQueue(agent) {
+  const queue = agent.task_queue || [];
+  if (queue.length <= 1) return '';
+  return '<div class="task-queue" data-agent="' + agent.id + '">' +
+    queue.map((t, i) => {
+      const isActive = t.active;
+      const priorityTag = t.priority && t.priority !== 'normal'
+        ? '<span class="task-priority ' + t.priority + '">' + t.priority + '</span>'
+        : '';
+      const switchBtn = !isActive
+        ? '<button class="task-switch-btn" onclick="event.stopPropagation();switchTask(\'' + agent.id + '\',' + i + ')">Activate</button>'
+        : '';
+      return '<div class="task-item' + (isActive ? ' active' : '') + '" draggable="true" data-idx="' + i + '">' +
+        '<span class="task-dot ' + (isActive ? 'active' : 'queued') + '"></span>' +
+        '<span class="task-title">' + t.title + '</span>' +
+        priorityTag + switchBtn + '</div>';
+    }).join('') + '</div>';
+}
+
+function switchTask(agentId, idx) {
+  if (!currentTasks) return;
+  const agent = currentTasks.agents.find(a => a.id === agentId);
+  if (!agent || !agent.task_queue) return;
+  agent.task_queue.forEach((t, i) => { t.active = (i === idx); });
+  const active = agent.task_queue[idx];
+  agent.current_task = active.title;
+  agent.progress = active.progress;
+  agent.updated_at = new Date().toISOString();
+  renderAgents(currentTasks.agents);
+  // Auto-save
+  commitTasks('Switch ' + agent.name + ' to: ' + active.title).then(() => {
+    showToast('Switched to: ' + active.title);
+  }).catch(e => showToast('Save failed: ' + e.message, 5000));
+}
+
+// Drag to reorder
+document.addEventListener('dragstart', e => {
+  if (!e.target.classList.contains('task-item')) return;
+  e.target.classList.add('dragging');
+  e.dataTransfer.setData('text/plain', e.target.dataset.idx);
+});
+
+document.addEventListener('dragend', e => {
+  if (e.target.classList.contains('task-item')) e.target.classList.remove('dragging');
+  document.querySelectorAll('.task-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+});
+
+document.addEventListener('dragover', e => {
+  const item = e.target.closest('.task-item');
+  if (!item) return;
+  e.preventDefault();
+  item.classList.add('drag-over');
+});
+
+document.addEventListener('dragleave', e => {
+  const item = e.target.closest('.task-item');
+  if (item) item.classList.remove('drag-over');
+});
+
+document.addEventListener('drop', e => {
+  const target = e.target.closest('.task-item');
+  if (!target) return;
+  e.preventDefault();
+  target.classList.remove('drag-over');
+  const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+  const toIdx = parseInt(target.dataset.idx);
+  const queue = target.closest('.task-queue');
+  if (!queue || fromIdx === toIdx) return;
+  const agentId = queue.dataset.agent;
+  const agent = currentTasks.agents.find(a => a.id === agentId);
+  if (!agent || !agent.task_queue) return;
+  const [moved] = agent.task_queue.splice(fromIdx, 1);
+  agent.task_queue.splice(toIdx, 0, moved);
+  renderAgents(currentTasks.agents);
+  commitTasks('Reorder ' + agent.name + ' tasks').catch(e => showToast('Save failed', 5000));
+});
 
 const AGENT_COLORS = {
   lisa: '#a78bfa',
