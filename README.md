@@ -110,3 +110,15 @@ Run via cron (example):
 ### task_queue (UI)
 The UI may emit `task_queue[]` with `active: true/false` per item. This is equivalent to `tasks[]` + `active_task_id`.
 If both exist, `task_queue` takes precedence in UI; agents may normalize to `tasks[]`.
+
+
+## Jennie onboarding (Telegram)
+Goal: allow Jennie to update `data/tasks.json` + append `data/activities.json` from her Telegram workflow.
+
+Minimal flow (same as other agents):
+1. `git pull --rebase`
+2. Update her entry in `data/tasks.json` (status, task_queue/active)
+3. Append event to `data/activities.json`
+4. `git add` → `git commit` → `git push`
+
+Tip: use the same update cadence as her Telegram tasks (e.g., after daily briefing).
