@@ -665,7 +665,7 @@ function renderKanban() {
         </div>
         ${t.assignee ? '<div class="kanban-card-assignee">→ ' + t.assignee + '</div>' : ''}
         <div style="margin-top:6px;display:flex;gap:4px;">
-          <button onclick="deleteKanbanTask('${t.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;">Delete</button>
+          <button onclick="deleteKanbanTask('${t.id}')" style="background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);color:#ff4757;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;transition:all 0.15s;">Delete</button>
         </div>
       </div>
     `).join('');
@@ -707,6 +707,7 @@ function _addTask() {
   document.getElementById('new-task-title').value = '';
 }
 function deleteKanbanTask(id) {
+  if (!confirm("Delete this task?")) return;
   kanbanTasks = kanbanTasks.filter(t => t.id !== id);
   saveKanban();
   try { renderKanban(); } catch(e) { console.error("renderKanban:", e); }
