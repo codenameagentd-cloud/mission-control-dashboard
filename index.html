@@ -457,15 +457,6 @@ let agentsData = [];
 let activitiesData = [];
 let kanbanTasks = JSON.parse(localStorage.getItem('kanban_tasks') || '[]');
 if (kanbanTasks.length === 0) {
-  kanbanTasks = [
-    { id: 'sample1', title: 'Review dashboard design', status: 'todo', category: 'design', created: new Date().toISOString() },
-    { id: 'sample2', title: 'Set up GitHub token', status: 'todo', category: 'setup', created: new Date().toISOString() },
-    { id: 'sample3', title: 'Configure agent dispatchers', status: 'doing', category: 'development', created: new Date().toISOString() },
-    { id: 'sample4', title: 'Deploy to GitHub Pages', status: 'done', category: 'ops', created: new Date().toISOString() },
-  ];
-  localStorage.setItem('kanban_tasks', JSON.stringify(kanbanTasks));
-}
-
 // Tabs
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
