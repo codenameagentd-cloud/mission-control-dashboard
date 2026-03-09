@@ -327,7 +327,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
   <!-- TASKS TAB (Kanban) -->
   <div class="tab-content" id="tab-tasks">
-    <div class="kanban">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;"><button onclick="if(confirm("Clear all kanban tasks?")){kanbanTasks=[];saveKanban();renderKanban();}" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;font-size:12px;padding:4px 12px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.borderColor="rgba(255,71,87,0.4)";this.style.color="rgba(255,71,87,0.8)"" onmouseout="this.style.borderColor="var(--border)";this.style.color="var(--text-secondary)"">Clear All</button></div>
+<div class="kanban">
       <div class="kanban-column" data-status="todo" ondrop="kanbanDrop(event)" ondragover="event.preventDefault()">
         <div class="kanban-header">
           <div class="kanban-title"><div class="dot"></div> To Do <span class="kanban-count" id="count-todo">0</span></div>
