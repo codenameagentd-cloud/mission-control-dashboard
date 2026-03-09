@@ -598,7 +598,7 @@ function renderAgentsTab() {
           <div class="task-title">${t.title}</div>
           <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">Progress: ${t.progress || 0}%</div>
         </div>
-        <span class="task-priority ${pClass}">${(t.priority || 'normal').toUpperCase()}</span>
+        <span class="task-priority ${pClass}" title="Task priority level">${(t.priority || 'normal').toUpperCase()}</span>
       </div>`;
     });
     html += `
@@ -613,6 +613,7 @@ function renderAgentsTab() {
         </div>
       </div>
       <div class="agent-detail-right">
+        <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;letter-spacing:0.5px;text-transform:uppercase">Assigned Tasks <span style="text-transform:none;opacity:0.6">— priority shown on right</span></div>
         <div class="agent-task-list">${tasksHtml || '<div style="color:var(--text-tertiary);font-size:12px">No tasks</div>'}</div>
       </div>
     </div>`;
