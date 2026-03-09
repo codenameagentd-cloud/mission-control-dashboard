@@ -666,7 +666,7 @@ function renderKanban() {
         </div>
         ${t.assignee ? '<div class="kanban-card-assignee">→ ' + t.assignee + '</div>' : ''}
         <div style="margin-top:6px;display:flex;gap:4px;">
-          <button onclick="deleteKanbanTask('${t.id}')" style="background:#ff4757;border:none;color:#fff;cursor:pointer;font-size:11px;padding:4px 12px;border-radius:6px;font-weight:500;letter-spacing:0.3px;box-shadow:0 1px 3px rgba(255,71,87,0.3);transition:all 0.15s;" onmouseover="this.style.background='#ee3344';this.style.transform='scale(1.03)'" onmouseout="this.style.background='#ff4757';this.style.transform='scale(1)'">🗑 Delete</button>
+          <button onclick="deleteKanbanTask('${t.id}')" style="background:transparent;border:1px solid rgba(255,71,87,0.25);color:rgba(255,71,87,0.6);cursor:pointer;font-size:11px;padding:3px 10px;border-radius:4px;font-weight:400;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,71,87,0.15)';this.style.borderColor='rgba(255,71,87,0.4)';this.style.color='rgba(255,71,87,0.9)'" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(255,71,87,0.25)';this.style.color='rgba(255,71,87,0.6)'">🗑 Delete</button>
         </div>
       </div>
     `).join('');
