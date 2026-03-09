@@ -1,115 +1,54 @@
 {
-  "generated_at": "2026-03-09T05:55:10.466918+00:00",
+  "generated_at": "2026-03-09T05:59:38.124682+00:00",
   "agents": [
     {
       "id": "lisa",
       "name": "Lisa",
       "status": "online",
-      "current_task": "QA verification",
+      "current_task": "",
       "progress": 40,
-      "updated_at": "2026-03-09T05:55:10.466918+00:00",
-      "task_queue": [
-        {
-          "id": "t1",
-          "title": "QA verification",
-          "progress": 80,
-          "priority": "high",
-          "active": true
-        },
-        {
-          "id": "t2",
-          "title": "Review dashboard fixes",
-          "progress": 60,
-          "priority": "normal",
-          "active": false
-        }
-      ],
+      "updated_at": "2026-03-09T05:59:38.124682+00:00",
+      "task_queue": [],
       "model": "claude-opus-4.6"
     },
     {
       "id": "jony",
       "name": "Jony",
       "status": "online",
-      "current_task": "Dashboard UX fixes",
+      "current_task": "",
       "progress": 60,
-      "updated_at": "2026-03-09T05:55:10.466918+00:00",
-      "task_queue": [
-        {
-          "id": "t1",
-          "title": "Dashboard UX fixes",
-          "progress": 70,
-          "priority": "high",
-          "active": true
-        },
-        {
-          "id": "t2",
-          "title": "Delete confirm + priority labels",
-          "progress": 100,
-          "priority": "normal",
-          "active": false
-        }
-      ],
+      "updated_at": "2026-03-09T05:59:38.124682+00:00",
+      "task_queue": [],
       "model": "claude-opus-4.6"
     },
     {
       "id": "jarvis",
       "name": "Jarvis",
       "status": "online",
-      "current_task": "Infra + dispatcher coordination",
+      "current_task": "",
       "progress": 90,
-      "updated_at": "2026-03-09T05:55:10.466918+00:00",
-      "task_queue": [
-        {
-          "id": "t1",
-          "title": "Infra + dispatcher coordination",
-          "progress": 60,
-          "priority": "high",
-          "active": true
-        },
-        {
-          "id": "t2",
-          "title": "Product walkthrough",
-          "progress": 50,
-          "priority": "normal",
-          "active": false
-        }
-      ],
+      "updated_at": "2026-03-09T05:59:38.124682+00:00",
+      "task_queue": [],
       "model": "claude-opus-4.6"
     },
     {
       "id": "naomi",
       "name": "Naomi",
       "status": "online",
-      "current_task": "Spec validation + gap analysis",
+      "current_task": "",
       "progress": 100,
-      "updated_at": "2026-03-09T05:55:10.466918+00:00",
-      "task_queue": [
-        {
-          "id": "t1",
-          "title": "Spec validation + gap analysis",
-          "progress": 90,
-          "priority": "high",
-          "active": true
-        }
-      ],
+      "updated_at": "2026-03-09T05:59:38.124682+00:00",
+      "task_queue": [],
       "model": "claude-sonnet-4.6"
     },
     {
       "id": "jennie",
       "name": "Jennie",
       "status": "online",
-      "current_task": "Daily briefing prep",
+      "current_task": "",
       "progress": 50,
-      "updated_at": "2026-03-09T05:55:10.466918+00:00",
-      "task_queue": [
-        {
-          "id": "t1",
-          "title": "Daily briefing prep",
-          "progress": 30,
-          "priority": "normal",
-          "active": true
-        }
-      ],
+      "updated_at": "2026-03-09T05:59:38.124682+00:00",
+      "task_queue": [],
       "model": "claude-sonnet-4.6"
     }
   ]
