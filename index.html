@@ -456,7 +456,6 @@ const AGENT_COLORS = { lisa: '#ec4899', jony: '#6366f1', jarvis: '#22c55e', naom
 let agentsData = [];
 let activitiesData = [];
 let kanbanTasks = JSON.parse(localStorage.getItem('kanban_tasks') || '[]');
-if (kanbanTasks.length === 0) {
 // Tabs
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
