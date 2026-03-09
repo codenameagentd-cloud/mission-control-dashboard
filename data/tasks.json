@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-09T03:36:20.351191+00:00",
+  "generated_at": "2026-03-09T04:53:32.751849+00:00",
   "agents": [
     {
       "id": "lisa",
@@ -7,7 +7,7 @@
       "status": "online",
       "current_task": "QA verification",
       "progress": 40,
-      "updated_at": "2026-03-09T03:36:20.351191+00:00",
+      "updated_at": "2026-03-09T04:53:32.751849+00:00",
       "task_queue": [
         {
           "id": "t1",
@@ -32,7 +32,7 @@
       "status": "online",
       "current_task": "Dashboard UX fixes",
       "progress": 60,
-      "updated_at": "2026-03-09T03:36:20.351191+00:00",
+      "updated_at": "2026-03-09T04:53:32.751849+00:00",
       "task_queue": [
         {
           "id": "t1",
@@ -57,7 +57,7 @@
       "status": "online",
       "current_task": "Infra + dispatcher coordination",
       "progress": 90,
-      "updated_at": "2026-03-09T03:36:20.351191+00:00",
+      "updated_at": "2026-03-09T04:53:32.751849+00:00",
       "task_queue": [
         {
           "id": "t1",
@@ -82,7 +82,7 @@
       "status": "online",
       "current_task": "Spec validation + gap analysis",
       "progress": 100,
-      "updated_at": "2026-03-09T03:36:20.351191+00:00",
+      "updated_at": "2026-03-09T04:53:32.751849+00:00",
       "task_queue": [
         {
           "id": "t1",
@@ -100,7 +100,7 @@
       "status": "online",
       "current_task": "Daily briefing prep",
       "progress": 50,
-      "updated_at": "2026-03-09T03:36:20.351191+00:00",
+      "updated_at": "2026-03-09T04:53:32.751849+00:00",
       "task_queue": [
         {
           "id": "t1",
@@ -110,7 +110,7 @@
           "active": true
         }
       ],
-      "model": "claude-opus-4.6"
+      "model": "claude-sonnet-4.6"
     }
   ]
 }
