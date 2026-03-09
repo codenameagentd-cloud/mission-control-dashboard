@@ -450,7 +450,7 @@ function requirePin(callback) {
 const REFRESH_INTERVAL = 30000;
 const REPO = 'codenameagentd-cloud/mission-control-dashboard';
 const AGENT_ROLES = { lisa: 'QA Lead', jony: 'Design Director', jarvis: 'System Admin', naomi: 'Product Lead', jennie: 'Life Assistant' };
-const AGENT_MODELS = { lisa: 'claude-opus-4', jony: 'claude-opus-4', jarvis: 'claude-opus-4', naomi: 'claude-opus-4', jennie: 'claude-opus-4' };
+const AGENT_MODELS = { lisa: 'claude-opus-4.6', jony: 'claude-opus-4.6', jarvis: 'claude-opus-4.6', naomi: 'claude-opus-4.6', jennie: 'claude-opus-4.6' };
 const AGENT_COLORS = { lisa: '#ec4899', jony: '#6366f1', jarvis: '#22c55e', naomi: '#f97316', jennie: '#06b6d4' };
 
 let agentsData = [];
@@ -537,7 +537,7 @@ function renderOverview() {
         <span class="status-dot ${a.status}"></span>
       </div>
       <div class="agent-task">${activeTask.title || a.current_task || 'No active task'}</div>
-      <div class="agent-model">Model: <span>${AGENT_MODELS[a.id] || 'unknown'}</span></div>
+      <div class="agent-model">Model: <span>${a.model || AGENT_MODELS[a.id] || 'unknown'}</span></div>
       <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
       <div class="progress-label"><span>Progress</span><span>${progress}%</span></div>
       <div class="tasks-completed">Completed: <span>${completedCount}</span> · Total: <span>${queue.length}</span></div>
@@ -580,7 +580,7 @@ function renderOverview() {
   // Model tracker
   let modelHtml = '';
   agents.forEach(a => {
-    modelHtml += `<div class="model-row"><div class="model-name">${a.name}</div><div class="model-agent">${AGENT_MODELS[a.id] || 'unknown'}</div></div>`;
+    modelHtml += `<div class="model-row"><div class="model-name">${a.name}</div><div class="model-agent">${a.model || AGENT_MODELS[a.id] || 'unknown'}</div></div>`;
   });
   document.getElementById('model-tracker-body').innerHTML = modelHtml;
 }
@@ -608,7 +608,7 @@ function renderAgentsTab() {
         <div class="agent-detail-role">${AGENT_ROLES[a.id] || ''}</div>
         <div class="agent-detail-meta">
           <div>Status: <span class="status-dot ${a.status}" style="display:inline-block;vertical-align:middle;width:6px;height:6px;"></span> <span>${a.status}</span></div>
-          <div>Model: <span style="color:var(--accent)">${AGENT_MODELS[a.id] || 'unknown'}</span></div>
+          <div>Model: <span style="color:var(--accent)">${a.model || AGENT_MODELS[a.id] || 'unknown'}</span></div>
           <div>Updated: <span>${a.updated_at ? timeAgo(a.updated_at) : 'N/A'}</span></div>
         </div>
       </div>
