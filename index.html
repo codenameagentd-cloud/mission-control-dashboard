@@ -598,7 +598,7 @@ function renderAgentsTab() {
           <div class="task-title">${t.title}</div>
           <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">Progress: ${t.progress || 0}%</div>
         </div>
-        <span class="task-priority ${pClass}" title="Task priority level">${(t.priority || 'normal').toUpperCase()}</span>
+        <span class="task-priority ${pClass}" title="Task priority level">⚡ ${(t.priority || 'normal').toUpperCase()}</span>
       </div>`;
     });
     html += `
