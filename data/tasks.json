@@ -7,7 +7,7 @@
       "status": "online",
       "current_task": "QA + 進度追蹤",
       "progress": 40,
-      "updated_at": "2026-03-08T06:56:00Z",
+      "updated_at": "2026-03-09T03:29:16.712482+00:00",
       "task_queue": [
         {
           "id": "t1",
@@ -23,7 +23,8 @@
           "priority": "normal",
           "active": false
         }
-      ]
+      ],
+      "model": "claude-opus-4.6"
     },
     {
       "id": "jony",
