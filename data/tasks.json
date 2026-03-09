@@ -1,25 +1,25 @@
 {
-  "generated_at": "2026-03-09T03:32:32.432573+00:00",
+  "generated_at": "2026-03-09T03:34:37.091459+00:00",
   "agents": [
     {
       "id": "lisa",
       "name": "Lisa",
       "status": "online",
-      "current_task": "QA + \u9032\u5ea6\u8ffd\u8e64",
+      "current_task": "QA verification",
       "progress": 40,
-      "updated_at": "2026-03-09T03:32:32.432573+00:00",
+      "updated_at": "2026-03-09T03:34:37.091459+00:00",
       "task_queue": [
         {
           "id": "t1",
-          "title": "QA + Progress Tracking",
-          "progress": 40,
-          "priority": "normal",
+          "title": "QA verification",
+          "progress": 80,
+          "priority": "high",
           "active": true
         },
         {
           "id": "t2",
-          "title": "Review P3 features",
-          "progress": 0,
+          "title": "Review dashboard fixes",
+          "progress": 60,
           "priority": "normal",
           "active": false
         }
@@ -29,23 +29,23 @@
     {
       "id": "jony",
       "name": "Jony",
-      "status": "busy",
-      "current_task": "Dashboard UI \u8a2d\u8a08",
+      "status": "online",
+      "current_task": "Dashboard UX fixes",
       "progress": 60,
-      "updated_at": "2026-03-09T03:32:32.432573+00:00",
+      "updated_at": "2026-03-09T03:34:37.091459+00:00",
       "task_queue": [
         {
           "id": "t1",
-          "title": "Dashboard UI Design",
-          "progress": 60,
-          "priority": "normal",
+          "title": "Dashboard UX fixes",
+          "progress": 70,
+          "priority": "high",
           "active": true
         },
         {
           "id": "t2",
-          "title": "Design system documentation",
-          "progress": 0,
-          "priority": "low",
+          "title": "Delete confirm + priority labels",
+          "progress": 100,
+          "priority": "normal",
           "active": false
         }
       ],
@@ -54,23 +54,23 @@
     {
       "id": "jarvis",
       "name": "Jarvis",
-      "status": "busy",
-      "current_task": "Repo + Schema \u5efa\u7f6e",
+      "status": "online",
+      "current_task": "Infra + dispatcher coordination",
       "progress": 90,
-      "updated_at": "2026-03-09T03:32:32.432573+00:00",
+      "updated_at": "2026-03-09T03:34:37.091459+00:00",
       "task_queue": [
         {
           "id": "t1",
-          "title": "Repo + Schema Setup",
-          "progress": 90,
-          "priority": "normal",
+          "title": "Infra + dispatcher coordination",
+          "progress": 60,
+          "priority": "high",
           "active": true
         },
         {
           "id": "t2",
-          "title": "Setup monitoring alerts",
-          "progress": 0,
-          "priority": "high",
+          "title": "Product walkthrough",
+          "progress": 50,
+          "priority": "normal",
           "active": false
         }
       ],
@@ -80,15 +80,15 @@
       "id": "naomi",
       "name": "Naomi",
       "status": "online",
-      "current_task": "\u9700\u6c42\u898f\u683c\u64b0\u5beb",
+      "current_task": "Spec validation + gap analysis",
       "progress": 100,
-      "updated_at": "2026-03-09T03:32:32.432573+00:00",
+      "updated_at": "2026-03-09T03:34:37.091459+00:00",
       "task_queue": [
         {
           "id": "t1",
-          "title": "Requirements Spec",
-          "progress": 100,
-          "priority": "normal",
+          "title": "Spec validation + gap analysis",
+          "progress": 90,
+          "priority": "high",
           "active": true
         }
       ],
@@ -98,14 +98,14 @@
       "id": "jennie",
       "name": "Jennie",
       "status": "online",
-      "current_task": "Daily Briefing + \u751f\u6d3b\u7ba1\u7406",
+      "current_task": "Daily briefing prep",
       "progress": 50,
-      "updated_at": "2026-03-09T03:32:32.432573+00:00",
+      "updated_at": "2026-03-09T03:34:37.091459+00:00",
       "task_queue": [
         {
           "id": "t1",
-          "title": "Daily Briefing + Life Management",
-          "progress": 50,
+          "title": "Daily briefing prep",
+          "progress": 30,
           "priority": "normal",
           "active": true
         }
