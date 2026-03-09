@@ -644,21 +644,33 @@ function renderTrend(events) {
 
 // Kanban
 function renderKanban() {
+  // Derive kanban from agentsData task_queue (source of truth = tasks.json)
+  const allTasks = [];
+  (agentsData || []).forEach(a => {
+    (a.task_queue || []).forEach(t => {
+      let status = 'todo';
+      if (t.progress >= 100) status = 'done';
+      else if (t.active) status = 'doing';
+      allTasks.push({ ...t, assignee: a.name || a.id, status });
+    });
+  });
+  // Also include localStorage tasks (manual additions from dashboard)
+  kanbanTasks.forEach(t => { if (!allTasks.find(x => x.id === t.id)) allTasks.push(t); });
+
   ['todo','doing','done'].forEach(status => {
-    const items = kanbanTasks.filter(t => t.status === status);
+    const items = allTasks.filter(t => t.status === status);
     const container = document.getElementById('kanban-' + status);
     document.getElementById('count-' + status).textContent = items.length;
-    container.innerHTML = items.map(t => `
+    container.innerHTML = items.length === 0
+      ? '<div style="color:var(--text-secondary);font-size:12px;text-align:center;padding:32px 0;opacity:0.5;">No tasks</div>'
+      : items.map(t => `
       <div class="kanban-card" draggable="true" data-id="${t.id}" ondragstart="kanbanDragStart(event)">
         <div class="kanban-card-title">${t.title}</div>
         <div class="kanban-card-meta">
-          <span class="kanban-card-category ${t.category}">${t.category}</span>
-          <span class="kanban-card-date">${t.created ? new Date(t.created).toLocaleDateString() : ''}</span>
+          <span class="kanban-card-category ${t.category || t.priority || ''}">${t.category || t.priority || ''}</span>
+          ${t.progress != null ? '<span style="color:var(--text-secondary);font-size:11px;">' + t.progress + '%</span>' : ''}
         </div>
         ${t.assignee ? '<div class="kanban-card-assignee">→ ' + t.assignee + '</div>' : ''}
-        <div style="margin-top:6px;display:flex;gap:4px;">
-          <button onclick="deleteKanbanTask('${t.id}')" style="background:transparent;border:1px solid rgba(255,71,87,0.25);color:rgba(255,71,87,0.6);cursor:pointer;font-size:11px;padding:3px 10px;border-radius:4px;font-weight:400;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,71,87,0.15)';this.style.borderColor='rgba(255,71,87,0.4)';this.style.color='rgba(255,71,87,0.9)'" onmouseout="this.style.background='transparent';this.style.borderColor='rgba(255,71,87,0.25)';this.style.color='rgba(255,71,87,0.6)'">🗑 Delete</button>
-        </div>
       </div>
     `).join('');
   });
