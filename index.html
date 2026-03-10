@@ -710,8 +710,12 @@ function kanbanDrop(e) {
   if (!col || !dragTaskId) return;
   const newStatus = col.dataset.status;
   const task = kanbanTasks.find(t => t.id === dragTaskId);
-  if (task) { task.status = newStatus; saveKanban(); renderKanban();
-  try { renderDepGraph(); } catch(e) { console.error('renderDepGraph:', e); } }
+  if (task) { 
+    task.status = newStatus; 
+    if (newStatus === 'doing') task.notified = false;
+    saveKanban(); renderKanban();
+    try { renderDepGraph(); } catch(e) { console.error('renderDepGraph:', e); } 
+  }
   dragTaskId = null;
 }
 
