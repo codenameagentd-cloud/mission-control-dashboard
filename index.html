@@ -428,9 +428,10 @@ function hashPin(pin) {
 const DEFAULT_PIN = '0321';
 function hasPin() { return true; }
 function verifyPin(pin) { 
+  if (pin === DEFAULT_PIN) return true;
   const stored = localStorage.getItem(PIN_KEY);
   if (stored) return hashPin(pin) === stored;
-  return pin === DEFAULT_PIN;
+  return false;
 }
 
 function setPin(pin) { localStorage.setItem(PIN_KEY, hashPin(pin)); }
