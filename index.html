@@ -789,7 +789,13 @@ function kanbanDrop(e) {
     const oldStatus = task.status;
     task.status = newStatus; 
     // State machine notifications
-    if (newStatus === 'doing' && oldStatus !== 'doing') {
+    if (newStatus === 'doing' && oldStatus === 'done') {
+      task.notified = false;
+      task.notify_type = 'reopen';
+      task.completed_at = null;
+      task.started_at = new Date().toISOString();
+      showToast('🔄 Task reopened: ' + task.title);
+    } else if (newStatus === 'doing' && oldStatus !== 'doing') {
       task.notified = false;
       task.notify_type = 'start';
       task.started_at = new Date().toISOString();
@@ -803,12 +809,6 @@ function kanbanDrop(e) {
       task.notified = false;
       task.notify_type = 'paused';
       showToast('⏸ Task paused: ' + task.title);
-    } else if (newStatus === 'doing' && oldStatus === 'done') {
-      task.notified = false;
-      task.notify_type = 'reopen';
-      task.completed_at = null;
-      task.started_at = new Date().toISOString();
-      showToast('🔄 Task reopened: ' + task.title);
     }
     saveKanban(); renderKanban();
     try { renderDepGraph(); } catch(e) { console.error('renderDepGraph:', e); }
