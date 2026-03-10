@@ -122,3 +122,22 @@ Minimal flow (same as other agents):
 4. `git add` → `git commit` → `git push`
 
 Tip: use the same update cadence as her Telegram tasks (e.g., after daily briefing).
+
+## Task Assignment via Discord
+
+Use `[task]` prefix in Discord to assign tasks that sync to the dashboard:
+
+```
+[task] @Jony Fix the modal animation HIGH
+[task] @Lisa QA all dashboard features
+[task] @Jarvis Set up cron dispatcher
+```
+
+**Format:** `[task] @Agent <description> [HIGH|LOW|CRITICAL]`
+
+Priority defaults to `MEDIUM` if not specified.
+
+**Manual sync:** Any agent can run:
+```bash
+python3 scripts/task_parser.py "[task] @Jony Fix button style HIGH"
+```
