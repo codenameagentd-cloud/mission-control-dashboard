@@ -773,14 +773,17 @@ function kanbanDrop(e) {
     // State machine notifications
     if (newStatus === 'doing' && oldStatus !== 'doing') {
       task.notified = false;
+      task.notify_type = 'start';
       task.started_at = new Date().toISOString();
       showToast('🔔 ' + (task.assignee||'Agent') + ' will be notified: ' + task.title);
     } else if (newStatus === 'done' && oldStatus !== 'done') {
       task.completed_at = new Date().toISOString();
-      task.notified_done = false;
+      task.notified = false;
+      task.notify_type = 'complete';
       showToast('📢 Task completed: ' + task.title);
     } else if (newStatus === 'todo' && oldStatus === 'doing') {
-      task.notified_paused = false;
+      task.notified = false;
+      task.notify_type = 'paused';
       showToast('⏸ Task paused: ' + task.title);
     }
     saveKanban(); renderKanban();
