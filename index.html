@@ -542,6 +542,24 @@ function ghHeaders() {
   return h;
 }
 
+
+async function commitTasksToGH(tasksData) {
+  const token = localStorage.getItem('gh_token');
+  if (!token) { showToast('⚠️ Set GitHub token first (⌘K → "token")'); return false; }
+  try {
+    // Get current file SHA
+    const meta = await fetch('https://api.github.com/repos/' + REPO + '/contents/data/tasks.json', { headers: ghHeaders() }).then(r => r.json());
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(tasksData, null, 2))));
+    const res = await fetch('https://api.github.com/repos/' + REPO + '/contents/data/tasks.json', {
+      method: 'PUT',
+      headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Dashboard: task status update', content, sha: meta.sha })
+    });
+    if (!res.ok) throw new Error(res.status);
+    return true;
+  } catch(e) { console.error('commitTasksToGH:', e); showToast('❌ Failed to push: ' + e.message); return false; }
+}
+
 function timeAgo(ts) {
   const d = (Date.now() - new Date(ts).getTime()) / 1000;
   if (d < 60) return 'just now';
@@ -787,7 +805,12 @@ function kanbanDrop(e) {
       showToast('⏸ Task paused: ' + task.title);
     }
     saveKanban(); renderKanban();
-    try { renderDepGraph(); } catch(e) { console.error('renderDepGraph:', e); } 
+    try { renderDepGraph(); } catch(e) { console.error('renderDepGraph:', e); }
+    // Push notification flags to GitHub for cron
+    if (localStorage.getItem('gh_token') && agentsData) {
+      const payload = { agents: agentsData, kanban_notifications: kanbanTasks.filter(t => t.notified === false), generated_at: new Date().toISOString() };
+      commitTasksToGH(payload).then(ok => { if (ok) showToast('✅ Synced to GitHub'); });
+    }
   }
   dragTaskId = null;
 }
