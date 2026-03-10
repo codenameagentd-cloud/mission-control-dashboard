@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-10T16:19:38.160552+00:00",
+  "generated_at": "2026-03-10T16:27:48.343757+00:00",
   "agents": [
     {
       "id": "lisa",
@@ -7,7 +7,7 @@
       "status": "online",
       "current_task": "",
       "progress": 40,
-      "updated_at": "2026-03-10T16:19:38.160552+00:00",
+      "updated_at": "2026-03-10T16:27:48.343757+00:00",
       "task_queue": [],
       "model": "claude-opus-4.6"
     },
@@ -17,7 +17,7 @@
       "status": "busy",
       "current_task": "",
       "progress": 60,
-      "updated_at": "2026-03-10T16:19:38.160552+00:00",
+      "updated_at": "2026-03-10T16:27:48.343757+00:00",
       "task_queue": [],
       "model": "claude-opus-4.6"
     },
@@ -27,7 +27,7 @@
       "status": "busy",
       "current_task": "Implement dispatcher [task] detection",
       "progress": 90,
-      "updated_at": "2026-03-10T16:19:38.160552+00:00",
+      "updated_at": "2026-03-10T16:27:48.343757+00:00",
       "task_queue": [
         {
           "id": "t-9d384496",
@@ -45,17 +45,17 @@
       "status": "online",
       "current_task": "",
       "progress": 100,
-      "updated_at": "2026-03-10T16:19:38.160552+00:00",
+      "updated_at": "2026-03-10T16:27:48.343757+00:00",
       "task_queue": [],
       "model": "claude-sonnet-4.6"
     },
     {
       "id": "jennie",
       "name": "Jennie",
-      "status": "idle",
+      "status": "online",
       "current_task": "",
       "progress": 50,
-      "updated_at": "2026-03-10T16:19:38.160552+00:00",
+      "updated_at": "2026-03-10T16:27:48.343757+00:00",
       "task_queue": [],
       "model": "claude-sonnet-4.6"
     }
