@@ -22,7 +22,15 @@ def parse_task_message(text):
     if not m: return None
     did, name, title = m.group(1), m.group(2), m.group(3).strip()
     agent = AGENTS_MAP.get(did) if did else NAME_MAP.get((name or '').lower())
-    return (agent, title) if agent and title else None
+    if not agent or not title: return None
+    # Extract priority from end of title
+    priority = 'MEDIUM'
+    pm = re.search(r'\b(HIGH|LOW|MEDIUM|CRITICAL)\b', title, re.IGNORECASE)
+    if pm:
+        priority = pm.group(1).upper()
+        title = title[:pm.start()].strip() + ' ' + title[pm.end():].strip()
+        title = title.strip()
+    return (agent, title, priority)
 
 def add_task(agent_id, title, priority='MEDIUM'):
     with open(TASKS_PATH) as f: data = json.load(f)
@@ -48,6 +56,6 @@ if __name__ == '__main__':
     priority = sys.argv[3] if len(sys.argv) > 3 and sys.argv[2] == '--priority' else 'MEDIUM'
     result = parse_task_message(msg)
     if result:
-        add_task(result[0], result[1], priority)
+        add_task(result[0], result[1], result[2] if len(result) > 2 else priority)
     else:
         print(json.dumps({'ok': False, 'error': 'No [task] pattern found'}))
