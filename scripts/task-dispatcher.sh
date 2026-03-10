@@ -13,12 +13,12 @@ python3 << 'PYEOF'
 import json, subprocess, sys, os, re, datetime
 
 AGENTS = {
+    '858603420989652992': 'david',
     '1478284015269187654': 'jony',
-    '1478284015269187654': 'jony', 
     '1478286708192706641': 'lisa',
     '1478287578628227184': 'jarvis',
     '1478288552272855222': 'naomi',
-    '1478289234581045348': 'jennie',
+    '1478289134190727168': 'jennie',
 }
 
 AGENT_NAMES = {

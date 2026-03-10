@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-10T01:17:24.846862+00:00",
+  "generated_at": "2026-03-10T15:01:12.024432+00:00",
   "agents": [
     {
       "id": "lisa",
@@ -14,10 +14,10 @@
     {
       "id": "jony",
       "name": "Jony",
-      "status": "online",
+      "status": "idle",
       "current_task": "",
       "progress": 60,
-      "updated_at": "2026-03-10T01:17:24.846862+00:00",
+      "updated_at": "2026-03-10T15:01:12.024432+00:00",
       "task_queue": [],
       "model": "claude-opus-4.6"
     },
