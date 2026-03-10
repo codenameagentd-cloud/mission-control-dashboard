@@ -380,6 +380,8 @@ body { font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace; backgro
     <h2>Add Task</h2>
     <label>Title</label>
     <input type="text" id="new-task-title" placeholder="Task title...">
+    <label>Description</label>
+    <textarea id="new-task-desc" placeholder="Details for the agent to execute..."></textarea>
     <label>Category</label>
     <select id="new-task-category">
       <option value="work">Work</option>
@@ -395,6 +397,13 @@ body { font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace; backgro
       <option value="jarvis">Jarvis</option>
       <option value="naomi">Naomi</option>
       <option value="jennie">Jennie</option>
+    </select>
+    <label>Priority</label>
+    <select id="new-task-priority">
+      <option value="MEDIUM">Medium</option>
+      <option value="HIGH">High</option>
+      <option value="LOW">Low</option>
+      <option value="CRITICAL">Critical</option>
     </select>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeAddTask()">Cancel</button>
@@ -687,7 +696,7 @@ function renderKanban() {
       ? '<div style="color:var(--text-secondary);font-size:12px;text-align:center;padding:32px 0;opacity:0.5;">No tasks</div>'
       : items.map(t => `
       <div class="kanban-card" draggable="true" data-id="${t.id}" ondragstart="kanbanDragStart(event)">
-        <div class="kanban-card-title">${t.title}</div>
+        <div class="kanban-card-title">${t.title}</div>${t.description ? '<div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px;white-space:pre-wrap;">' + t.description.substring(0,80) + (t.description.length>80?"...":"") + '</div>' : ''}
         <div class="kanban-card-meta">
           <span class="kanban-card-category ${t.category || t.priority || ''}">${t.category || t.priority || ''}</span>
           ${t.progress != null ? '<span style="color:var(--text-secondary);font-size:11px;">' + t.progress + '%</span>' : ''}
@@ -739,6 +748,7 @@ function _addTask() {
   try { renderDepGraph(); } catch(e) { console.error('renderDepGraph:', e); }
   closeAddTask();
   document.getElementById('new-task-title').value = '';
+  document.getElementById('new-task-desc').value = '';
 }
 function editKanbanTask(id) {
   const allTasks = [];
