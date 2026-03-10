@@ -795,6 +795,8 @@ function closeAddTask() { document.getElementById('add-task-modal').classList.re
 function addTask() { requirePin(() => _addTask()); }
 function _addTask() {
   const title = document.getElementById('new-task-title').value.trim();
+  const desc = document.getElementById('new-task-desc').value.trim();
+  if (!desc) { document.getElementById('new-task-desc').focus(); showToast('⚠️ Description is required'); return; }
   if (!title) return;
   kanbanTasks.push({
     id: 'kt-' + Date.now(),
