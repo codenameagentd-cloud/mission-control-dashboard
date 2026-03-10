@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-10T16:28:44.369505+00:00",
+  "generated_at": "2026-03-10T16:30:58.197029+00:00",
   "agents": [
     {
       "id": "lisa",
@@ -7,7 +7,7 @@
       "status": "online",
       "current_task": "",
       "progress": 40,
-      "updated_at": "2026-03-10T16:28:44.369505+00:00",
+      "updated_at": "2026-03-10T16:30:58.197029+00:00",
       "task_queue": [],
       "model": "claude-opus-4.6"
     },
@@ -17,7 +17,7 @@
       "status": "busy",
       "current_task": "",
       "progress": 60,
-      "updated_at": "2026-03-10T16:28:44.369505+00:00",
+      "updated_at": "2026-03-10T16:30:58.197029+00:00",
       "task_queue": [],
       "model": "claude-opus-4.6"
     },
@@ -27,7 +27,7 @@
       "status": "busy",
       "current_task": "Implement dispatcher [task] detection",
       "progress": 90,
-      "updated_at": "2026-03-10T16:28:44.369505+00:00",
+      "updated_at": "2026-03-10T16:30:58.197029+00:00",
       "task_queue": [
         {
           "id": "t-9d384496",
@@ -45,9 +45,9 @@
       "status": "online",
       "current_task": "",
       "progress": 100,
-      "updated_at": "2026-03-10T16:28:44.369505+00:00",
+      "updated_at": "2026-03-10T16:30:58.197029+00:00",
       "task_queue": [],
-      "model": "claude-sonnet-4.6"
+      "model": "claude-opus-4.6"
     },
     {
       "id": "jennie",
@@ -55,7 +55,7 @@
       "status": "online",
       "current_task": "",
       "progress": 50,
-      "updated_at": "2026-03-10T16:28:44.369505+00:00",
+      "updated_at": "2026-03-10T16:30:58.197029+00:00",
       "task_queue": [],
       "model": "claude-opus-4.6"
     }
