@@ -410,6 +410,47 @@ body { font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace; backgro
       <button class="btn-primary" onclick="addTask()">Add</button>
     </div>
   </div>
+
+<!-- Edit Task Modal -->
+<div class="modal-overlay" id="edit-task-modal">
+  <div class="modal">
+    <h2>Edit Task</h2>
+    <input type="hidden" id="edit-task-id">
+    <label>Title</label>
+    <input type="text" id="edit-task-title">
+    <label>Description</label>
+    <textarea id="edit-task-desc" placeholder="Details for the agent..."></textarea>
+    <label>Category</label>
+    <select id="edit-task-category">
+      <option value="work">Work</option>
+      <option value="development">Development</option>
+      <option value="marketing">Marketing</option>
+      <option value="personal">Personal</option>
+    </select>
+    <label>Assignee</label>
+    <select id="edit-task-assignee">
+      <option value="">Unassigned</option>
+      <option value="lisa">Lisa</option>
+      <option value="jony">Jony</option>
+      <option value="jarvis">Jarvis</option>
+      <option value="naomi">Naomi</option>
+      <option value="jennie">Jennie</option>
+    </select>
+    <label>Priority</label>
+    <select id="edit-task-priority">
+      <option value="MEDIUM">Medium</option>
+      <option value="HIGH">High</option>
+      <option value="LOW">Low</option>
+      <option value="CRITICAL">Critical</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-danger" onclick="deleteFromEdit()" style="margin-right:auto;">Delete</button>
+      <button class="btn-secondary" onclick="closeEditTask()">Cancel</button>
+      <button class="btn-primary" onclick="saveEditTask()">Save</button>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script>
@@ -754,13 +795,37 @@ function editKanbanTask(id) {
   kanbanTasks.forEach(t => { if (!allTasks.find(x => x.id === t.id)) allTasks.push(t); });
   const task = allTasks.find(t => t.id === id) || kanbanTasks.find(t => t.id === id);
   if (!task) return;
-  const newTitle = prompt('Edit task title:', task.title);
-  if (newTitle !== null && newTitle.trim()) {
-    const kt = kanbanTasks.find(t => t.id === id);
-    if (kt) { kt.title = newTitle.trim(); saveKanban(); renderKanban(); }
-    else { alert('Server tasks can only be edited via [task] commands'); }
-  }
+  document.getElementById('edit-task-id').value = id;
+  document.getElementById('edit-task-title').value = task.title || '';
+  document.getElementById('edit-task-desc').value = task.description || '';
+  document.getElementById('edit-task-category').value = task.category || 'work';
+  document.getElementById('edit-task-assignee').value = (task.assignee || '').toLowerCase();
+  document.getElementById('edit-task-priority').value = task.priority || 'MEDIUM';
+  document.getElementById('edit-task-modal').classList.add('active');
 }
+function closeEditTask() { document.getElementById('edit-task-modal').classList.remove('active'); }
+function saveEditTask() { requirePin(() => _saveEditTask()); }
+function _saveEditTask() {
+  const id = document.getElementById('edit-task-id').value;
+  let task = kanbanTasks.find(t => t.id === id);
+  if (!task) {
+    // Server task — clone into kanban for local edit
+    const allTasks = [];
+    (agentsData || []).forEach(a => { (a.task_queue || []).forEach(t => { allTasks.push({...t, assignee: a.name || a.id}); }); });
+    const src = allTasks.find(t => t.id === id);
+    if (src) { task = {...src}; kanbanTasks.push(task); }
+    else return;
+  }
+  task.title = document.getElementById('edit-task-title').value.trim() || task.title;
+  task.description = document.getElementById('edit-task-desc').value.trim();
+  task.category = document.getElementById('edit-task-category').value;
+  task.assignee = document.getElementById('edit-task-assignee').value;
+  task.priority = document.getElementById('edit-task-priority').value;
+  saveKanban(); renderKanban();
+  try { renderDepGraph(); } catch(e) {}
+  closeEditTask();
+}
+function deleteFromEdit() { requirePin(() => { deleteKanbanTask(document.getElementById('edit-task-id').value); closeEditTask(); }); }
 function deleteKanbanTask(id) {
   if (!confirm("Delete this task?")) return;
   kanbanTasks = kanbanTasks.filter(t => t.id !== id);
