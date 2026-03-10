@@ -803,6 +803,12 @@ function kanbanDrop(e) {
       task.notified = false;
       task.notify_type = 'paused';
       showToast('⏸ Task paused: ' + task.title);
+    } else if (newStatus === 'doing' && oldStatus === 'done') {
+      task.notified = false;
+      task.notify_type = 'reopen';
+      task.completed_at = null;
+      task.started_at = new Date().toISOString();
+      showToast('🔄 Task reopened: ' + task.title);
     }
     saveKanban(); renderKanban();
     try { renderDepGraph(); } catch(e) { console.error('renderDepGraph:', e); }
